@@ -90,23 +90,12 @@ User Request → Astro Router → Page Component → Layout → Components → R
 ```javascript
 {
   base: '/website/',           // Base URL path for all requests
-  redirects: {
-    '/website/blog': '/website/under-construction',
-    '/website/contact': '/website/under-construction',
-    '/website/about': '/website/under-construction',
-  }
 }
 ```
 
 **Key Settings:**
 
 - **`base`**: The site runs under `/website/` base path, useful for subdirectory deployment
-- **`redirects`**: Three pages currently redirect to an under-construction placeholder:
-  - About page
-  - Blog page
-  - Contact page
-
-This allows these routes to exist while showing a holding page until they're ready.
 
 ---
 
@@ -129,9 +118,9 @@ This allows these routes to exist while showing a holding page until they're rea
 
 **Navigation Links:**
 - Home: `/website/`
-- About: `/website/about` (redirects to under-construction)
-- Blog: `/website/blog` (redirects to under-construction)
-- Contact: `/website/contact` (redirects to under-construction)
+- About: `/website/about`
+- Blog: `/website/blog`
+- Contact: `/website/contact`
 - Discord: `https://discord.gg/waitforsometimeig` (external)
 
 ### `Footer.astro`
@@ -187,21 +176,15 @@ This allows these routes to exist while showing a holding page until they're rea
 
 ### `about.astro`
 
-**Current Status**: Under construction
-
-**Route:** `/website/about` → redirects to `/website/under-construction`
+**Route:** `/website/about`
 
 ### `blog.astro`
 
-**Current Status**: Under construction
-
-**Route:** `/website/blog` → redirects to `/website/under-construction`
+**Route:** `/website/blog`
 
 ### `contact.astro`
 
-**Current Status**: Under construction
-
-**Route:** `/website/contact` → redirects to `/website/under-construction`
+**Route:** `/website/contact`
 
 ### `under-construction.astro`
 
@@ -405,11 +388,9 @@ const testimonials = [
 ];
 ```
 
-### Enable About/Blog/Contact Pages
+### Customizing About/Blog/Contact Pages
 
-1. Remove the redirect from `astro.config.mjs`
-2. Add actual content to the respective `.astro` files
-3. Update navigation styling if needed
+Add actual content to the respective `.astro` files (`about.astro`, `blog.astro`, `contact.astro`) as needed.
 
 ### Add Favicon
 
