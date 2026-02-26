@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 ---
 
-<Base title="Under Construction — CoQatalyst" currentPath="">
+<Base title="Under Construction — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}under-construction`}>
   <div class="uc-root">
 
     <div class="uc-grid-bg"></div>
@@ -14,7 +14,7 @@ import Base from '../layouts/Base.astro';
     <div class="uc-inner">
       <div class="uc-logo anim-float">
         <div class="logo-glow"></div>
-        <img src="/assets/logo-icon.png" alt="CoQatalyst" width="100" height="100" />
+        <img src={`${import.meta.env.BASE_URL}assets/logo-icon.png`} alt="CoQatalyst" width="100" height="100" />
       </div>
 
       <div class="status-tag font-mono anim-slide-in">
@@ -49,7 +49,7 @@ import Base from '../layouts/Base.astro';
         <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
           Join Discord &rarr;
         </a>
-        <a href="/" class="btn-outline">Back to Home</a>
+        <a href={import.meta.env.BASE_URL} class="btn-outline">Back to Home</a>
       </div>
     </div>
 

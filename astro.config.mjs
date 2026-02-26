@@ -1,11 +1,10 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://coqatalyst.github.io/',
   base: '/website/',
   redirects: {
-    '/blog': '/under-construction',
-    '/contact': '/under-construction',
-    '/about': '/under-construction',
+    '/website/blog': '/website/under-construction',
+    '/website/contact': '/website/under-construction',
+    '/website/about': '/website/under-construction',
   }
 });

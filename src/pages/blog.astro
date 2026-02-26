@@ -64,7 +64,7 @@ const rest = posts.filter(p => !p.featured);
 const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
 ---
 
-<Base title="Blog — CoQatalyst" currentPath="/blog">
+<Base title="Blog — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}blog`}>
   <div style="padding-top:67px;">
 
     <section class="blog-hero">
@@ -106,7 +106,7 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
                 <span class="meta-text font-mono">
                   {featured.author} &middot; {featured.date} &middot; {featured.readTime} read
                 </span>
-                <a href={`/blog/${featured.slug}`} class="btn-primary">Read &rarr;</a>
+                <a href={`${import.meta.env.BASE_URL}blog/${featured.slug}`} class="btn-primary">Read &rarr;</a>
               </div>
             </div>
           </div>
@@ -124,7 +124,7 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
             <p class="post-excerpt">{post.excerpt}</p>
             <div class="post-foot">
               <span class="post-byline font-mono">{post.author} &middot; {post.date}</span>
-              <a href={`/blog/${post.slug}`} class="post-link font-mono" style={`color:${post.accent};`}>
+              <a href={`${import.meta.env.BASE_URL}blog/${post.slug}`} class="post-link font-mono" style={`color:${post.accent};`}>
                 Read &rarr;
               </a>
             </div>

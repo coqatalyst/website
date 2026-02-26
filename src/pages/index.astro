@@ -96,7 +96,7 @@ const marqueeItems = Array(6).fill([
             </p>
 
             <div class="hero-ctas anim-fade-up d3">
-              <a href="/about" class="btn-primary">Learn More &rarr;</a>
+              <a href={`${import.meta.env.BASE_URL}about`} class="btn-primary">Learn More &rarr;</a>
               <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-outline">Join the Community</a>
             </div>
           </div>
@@ -104,7 +104,7 @@ const marqueeItems = Array(6).fill([
           <div class="hero-logo-wrap anim-float">
             <div class="hero-ring-outer anim-spin-rev"></div>
             <div class="hero-ring-inner anim-spin"></div>
-            <img src="/assets/logo-icon.png" alt="CoQatalyst" class="hero-logo-img" width="220" height="220" />
+            <img src={`${import.meta.env.BASE_URL}assets/logo-icon.png`} alt="CoQatalyst" class="hero-logo-img" width="220" height="220" />
           </div>
 
         </div>
@@ -197,7 +197,7 @@ const marqueeItems = Array(6).fill([
               <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
                 Join Discord Now &rarr;
               </a>
-              <a href="/contact" class="btn-outline">Get in Touch</a>
+              <a href={`${import.meta.env.BASE_URL}contact`} class="btn-outline">Get in Touch</a>
             </div>
           </div>
         </div>

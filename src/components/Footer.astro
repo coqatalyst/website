@@ -1,9 +1,10 @@
 ---
+const baseUrl = import.meta.env.BASE_URL;
 const navLinks = [
-  { href: '/',        label: 'Home'    },
-  { href: '/about',   label: 'About'   },
-  { href: '/blog',    label: 'Blog'    },
-  { href: '/contact', label: 'Contact' },
+  { href: baseUrl,        label: 'Home'    },
+  { href: baseUrl + 'about',   label: 'About'   },
+  { href: baseUrl + 'blog',    label: 'Blog'    },
+  { href: baseUrl + 'contact', label: 'Contact' },
 ];
 ---
 
@@ -14,7 +15,7 @@ const navLinks = [
 
       <div class="footer-brand">
         <div class="brand-row">
-          <img src="/assets/logo.png" alt="CoQatalyst" width="32" height="32" style="border-radius:6px;" />
+          <img src={baseUrl + 'assets/logo.png'} alt="CoQatalyst" width="32" height="32" style="border-radius:6px;" />
           <span class="brand-name">CoQatalyst</span>
         </div>
         <p class="brand-desc">
