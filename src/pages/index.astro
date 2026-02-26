@@ -1,0 +1,526 @@
+---
+import Base from '../layouts/Base.astro';
+
+const stats = [
+  { value: 'x+', label: 'Teen Scientists' },
+  { value: 'x+',  label: 'Exhibitions'     },
+  { value: 'x+',  label: 'Research Topics' },
+  { value: 'LOTS OF', label: 'Curiosity'   },
+];
+
+const features = [
+  {
+    num: '01',
+    title: 'Science Exhibitions',
+    desc:  'We organise and host real science exhibitions where teens showcase original research and experiments to a live audience.',
+    accent: '#226d0b',
+    icon: 'EXH',
+  },
+  {
+    num: '02',
+    title: 'Discord Community',
+    desc:  'Our Discord is a space to ask questions, find collaborators, share findings, and geek out with people who actually get it.',
+    accent: '#e88f1a',
+    icon: 'COM',
+  },
+  {
+    num: '03',
+    title: 'Research Guidance',
+    desc:  'Learn how to design experiments, write papers, and navigate the research world — all peer to peer, no gatekeeping.',
+    accent: '#dfa651',
+    icon: 'RES',
+  },
+  {
+    num: '04',
+    title: 'Collaboration',
+    desc:  'Connect with other teen scientists across disciplines: biology, physics, CS, chemistry, environmental science, and more.',
+    accent: '#cb1b3a',
+    icon: 'COL',
+  },
+];
+
+const testimonials = [
+  {
+    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    name:  'Random Guy 1',
+    role:  'NA',
+  },
+  {
+    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    name:  'Random Guy 2',
+    role:  'NA',
+  },
+  {
+    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    name:  'Random Guy 3',
+    role:  'NA',
+  },
+];
+
+const marqueeItems = Array(6).fill([
+  'Science Exhibitions',
+  'Teen Research',
+  'Cognitive Uphold',
+  'Peer Learning',
+  'CoQatalyst',
+]).flat();
+---
+
+<Base title="CoQatalyst" currentPath="/">
+  <div style="padding-top:67px;">
+
+    <section class="hero grid-bg">
+      <div class="hero-orb hero-orb--green"></div>
+      <div class="hero-orb hero-orb--orange"></div>
+
+      <div class="container hero-content">
+        <div class="hero-grid">
+
+          <div>
+            <div class="section-tag anim-slide-in" style="margin-bottom:24px;">
+              By teens &middot; For teens &middot; Est. 2026
+            </div>
+
+            <h1 class="hero-h1 font-display anim-fade-up">
+              <span class="hero-h1-white">SCIENCE</span>
+              <span class="gradient-text">UNCHAINED</span>
+            </h1>
+
+            <h2 class="hero-sub font-display anim-fade-up d1">
+              THE RESEARCH COLLECTIVE
+            </h2>
+
+            <p class="hero-desc anim-fade-up d2">
+              CoQatalyst is where high schoolers do real science. We host exhibitions,
+              build research skills, and forming a community that actually gets it.
+            </p>
+
+            <div class="hero-ctas anim-fade-up d3">
+              <a href="/about" class="btn-primary">Learn More &rarr;</a>
+              <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-outline">Join the Community</a>
+            </div>
+          </div>
+
+          <div class="hero-logo-wrap anim-float">
+            <div class="hero-ring-outer anim-spin-rev"></div>
+            <div class="hero-ring-inner anim-spin"></div>
+            <img src="/assets/logo-icon.png" alt="CoQatalyst" class="hero-logo-img" width="220" height="220" />
+          </div>
+
+        </div>
+
+        <div class="stats-bar anim-fade-up d4">
+          {stats.map(stat => (
+            <div class="stat-cell">
+              <div class="stat-value font-display" set:html={stat.value}></div>
+              <div class="stat-label font-mono">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee-bar">
+      <div class="marquee-track anim-marquee">
+        {marqueeItems.map(text => (
+          <span class="marquee-item font-display">
+            {text} <span class="marquee-dot">&#10022;</span>
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <section class="section-pad">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag" style="margin-bottom:16px;">What We Do</div>
+          <h2 class="section-h2 font-display">
+            WHERE CURIOSITY<br />
+            <span class="gradient-text-2">MEETS ACTION</span>
+          </h2>
+        </div>
+
+        <div class="features-grid">
+          {features.map(f => (
+            <div class="feature-card sharp-card" style={`--accent:${f.accent};`}>
+              <div class="feature-num font-mono">{f.num}</div>
+              <h3 class="feature-title font-display">{f.title}</h3>
+              <p class="feature-desc">{f.desc}</p>
+              <div class="feature-line" style={`background:${f.accent};`}></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad testimonials-bg">
+      <div class="testimonials-ring"></div>
+      <div class="container">
+        <div class="section-header" style="text-align:center;">
+          <div class="section-tag" style="justify-content:center; margin-bottom:16px;">From the Community</div>
+          <h2 class="section-h2 font-display">WHAT WE SPEAK</h2>
+        </div>
+
+        <div class="testi-grid">
+          {testimonials.map(t => (
+            <div class="sharp-card-green testi-card">
+              <div class="testi-quote-mark font-display">&rdquo;</div>
+              <p class="testi-body">&ldquo;{t.quote}&rdquo;</p>
+              <div class="testi-author">
+                <div class="testi-avatar font-display">{t.name[0]}</div>
+                <div>
+                  <div class="testi-name font-mono">{t.name}</div>
+                  <div class="testi-role font-mono">{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad">
+      <div class="container cta-wrap">
+        <div class="cta-box">
+          <div class="stripe-accent cta-stripe"></div>
+          <div class="cta-inner">
+            <div class="section-tag" style="justify-content:center; margin-bottom:20px;">Ready to explore?</div>
+            <h2 class="cta-h2 font-display">
+              JOIN THE<br />
+              <span class="gradient-text">MOVEMENT</span>
+            </h2>
+            <p class="cta-desc">
+              Science doesn't wait for college. Come as you are — curious,
+              passionate, and ready to learn with others who love exploration.
+            </p>
+            <div class="cta-btns">
+              <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
+                Join Discord Now &rarr;
+              </a>
+              <a href="/contact" class="btn-outline">Get in Touch</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Base>
+
+<style>
+.hero {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  perspective: 1000px;
+}
+.hero-content {
+  padding: 80px 24px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: center;
+}
+.hero-h1 {
+  font-size: clamp(4rem, 10vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+}
+.hero-h1-white { color: #f5f0e8; }
+.hero-sub {
+  font-size: clamp(1.4rem, 3vw, 2.8rem);
+  color: rgba(245,240,232,0.35);
+  letter-spacing: 0.05em;
+  margin-bottom: 28px;
+}
+.hero-desc {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(245,240,232,0.65);
+  max-width: 520px;
+  margin-bottom: 36px;
+}
+.hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.hero-logo-wrap {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  flex-shrink: 0;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: crosshair;
+}
+.hero-logo-wrap:hover {
+  transform: scale(1.08) rotateY(-10deg);
+}
+.hero-ring-outer {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 1px dashed rgba(34,109,11,0.4);
+  transition: all 0.6s ease;
+}
+.hero-ring-inner {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  border: 1px dashed rgba(223,166,81,0.2);
+  transition: all 0.6s ease;
+}
+.hero-logo-wrap:hover .hero-ring-outer {
+  inset: -40px;
+  border-color: #dfa651;
+  border-style: solid;
+  opacity: 0.6;
+}
+.hero-logo-wrap:hover .hero-ring-inner {
+  inset: -60px;
+  border-color: #226d0b;
+  border-style: solid;
+  opacity: 0.4;
+}
+.hero-logo-img {
+  border-radius: 24px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 20px rgba(34,109,11,0.4), 0 0 60px rgba(34,109,11,0.1);
+  transition: all 0.5s ease;
+}
+.hero-logo-wrap:hover .hero-logo-img {
+  filter: brightness(1.1) contrast(1.1);
+  box-shadow: 0 0 40px rgba(34,109,11,0.6), 0 0 80px rgba(223,166,81,0.2);
+}
+
+.stats-bar {
+  margin-top: 80px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.stat-cell {
+  background: #0a0a0a;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.stat-cell:hover { 
+  background: rgba(34,109,11,0.12);
+  transform: translateY(-2px);
+}
+.stat-cell::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; width: 100%; height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.stat-cell:hover::after { transform: scaleX(1); }
+
+.stat-value {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #226d0b, #dfa651);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+  margin-top: 4px;
+}
+
+.marquee-bar {
+  background: linear-gradient(135deg, #226d0b, #1a5208);
+  padding: 14px 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.marquee-track {
+  display: flex;
+  gap: 48px;
+  white-space: nowrap;
+  width: max-content;
+}
+.marquee-item {
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.7);
+}
+.marquee-dot { color: #dfa651; margin: 0 8px; }
+
+.section-pad { padding: 100px 0; }
+.section-header { margin-bottom: 56px; }
+.section-h2 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1;
+  color: #f5f0e8;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+.feature-card {
+  padding: 32px;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  cursor: default;
+}
+.feature-card:hover {
+  transform: translateY(-8px) rotateX(4deg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(34,109,11,0.12);
+  border-color: var(--accent);
+}
+.feature-num {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.feature-title {
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+  color: #f5f0e8;
+  margin-bottom: 12px;
+}
+.feature-desc {
+  color: rgba(245,240,232,0.55);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.feature-line {
+  width: 40px;
+  height: 2px;
+  margin-top: 20px;
+  transition: width 0.3s;
+}
+.feature-card:hover .feature-line { width: 100%; }
+
+.testimonials-bg {
+  background: linear-gradient(180deg, transparent, rgba(34,109,11,0.05) 50%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.testi-card {
+  padding: 32px;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.testi-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  background: rgba(34, 109, 11, 0.15);
+  border-color: #dfa651;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+}
+.testi-quote-mark {
+  position: absolute;
+  top: 16px; right: 24px;
+  font-size: 5rem;
+  color: rgba(34,109,11,0.2);
+  line-height: 1;
+  transition: all 0.4s ease;
+}
+.testi-card:hover .testi-quote-mark {
+  color: #dfa651;
+  transform: rotate(-15deg) scale(1.2);
+  opacity: 0.4;
+}
+.testi-body {
+  color: rgba(245,240,232,0.75);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  font-style: italic;
+  margin-bottom: 24px;
+}
+.testi-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.testi-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #226d0b, #dfa651);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: white;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.testi-card:hover .testi-avatar {
+  transform: scale(1.1) rotate(360deg);
+  box-shadow: 0 0 15px rgba(34,109,11,0.6);
+}
+.testi-name {
+  font-size: 0.8rem;
+  color: #dfa651;
+}
+.testi-role {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: rgba(245,240,232,0.35);
+}
+
+.cta-wrap { max-width: 900px; }
+.cta-box {
+  background: linear-gradient(135deg, rgba(34,109,11,0.15), rgba(232,143,26,0.1));
+  border: 1px solid rgba(34,109,11,0.3);
+  padding: 80px 48px;
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  transition: all 0.5s ease;
+}
+.cta-box:hover {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(34,109,11,0.2), rgba(232,143,26,0.15));
+}
+.cta-inner { position: relative; z-index: 1; }
+.cta-h2 {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+  color: #f5f0e8;
+  margin-bottom: 20px;
+}
+.cta-btns {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center; 
+  flex-wrap: wrap;
+  margin-top: 40px; 
+}
+
+@media (max-width: 768px) {
+  .hero-grid   { grid-template-columns: 1fr; }
+  .hero-logo-wrap { display: none; }
+  .stats-bar   { grid-template-columns: repeat(2, 1fr); }
+}
+</style>

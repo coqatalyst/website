@@ -1,0 +1,345 @@
+---
+import Base from '../layouts/Base.astro';
+
+const posts = [
+  {
+    slug: 'blah-blah1',
+    tag: 'Research',
+    title: 'Something 1',
+    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    author: 'Dude1',
+    date: 'Feb 1, 2026',
+    readTime: '7 min',
+    accent: '#226d0b',
+    featured: true,
+  },
+  {
+    slug: 'blah-blah2',
+    tag: 'Events',
+    title: "Something 2",
+    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    author: 'Dude2',
+    date: 'Feb 1, 2026',
+    readTime: '5 min',
+    accent: '#e88f1a',
+    featured: false,
+  },
+  {
+    slug: 'blah-blah3',
+    tag: 'Community',
+    title: 'Something 3',
+    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    author: 'Dude3',
+    date: 'Feb 1, 2026',
+    readTime: '4 min',
+    accent: '#dfa651',
+    featured: false,
+  },
+  {
+    slug: 'blah-blah4',
+    tag: 'Science',
+    title: "Something 4",
+    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    author: 'Dude4',
+    date: 'Feb 1, 2026',
+    readTime: '6 min',
+    accent: '#cb1b3a',
+    featured: false,
+  },
+  {
+    slug: 'blah-blah5',
+    tag: 'Community',
+    title: 'Something 5',
+    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    author: 'Dude5',
+    date: 'Feb 1, 2026',
+    readTime: '8 min',
+    accent: '#226d0b',
+    featured: false,
+  },
+];
+
+const featured = posts.find(p => p.featured);
+const rest = posts.filter(p => !p.featured);
+const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
+---
+
+<Base title="Blog — CoQatalyst" currentPath="/blog">
+  <div style="padding-top:67px;">
+
+    <section class="blog-hero">
+      <div class="blog-hero-orb"></div>
+      <div class="container">
+        <div class="section-tag" style="margin-bottom:16px;">CoQatalyst Blog</div>
+        <h1 class="font-display blog-h1">
+          <span class="blog-h1-white">THOUGHTS FROM</span>
+          <span class="gradient-text">OUR COMMUNITY</span>
+        </h1>
+        <p class="blog-sub">
+          Research tips, community stories, science deep-dives... Everything written by teens in the CoQatalyst community.
+        </p>
+      </div>
+    </section>
+
+    <div class="container tag-row">
+      {tags.map((tag, i) => (
+        <button class={`tag-btn font-mono ${i === 0 ? 'tag-btn--active' : ''}`}>
+          {tag}
+        </button>
+      ))}
+    </div>
+
+    <div class="container blog-body">
+
+      {featured && (
+        <div class="featured-wrap">
+          <div class="featured-card">
+            <div class="stripe-accent featured-stripe"></div>
+            <div class="featured-inner">
+              <div class="featured-tags">
+                <span class="tag-pill tag-pill--green font-mono">Featured</span>
+                <span class="featured-cat font-mono">{featured.tag}</span>
+              </div>
+              <h2 class="font-display featured-title">{featured.title}</h2>
+              <p class="featured-excerpt">{featured.excerpt}</p>
+              <div class="featured-meta">
+                <span class="meta-text font-mono">
+                  {featured.author} &middot; {featured.date} &middot; {featured.readTime} read
+                </span>
+                <a href={`/blog/${featured.slug}`} class="btn-primary">Read &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div class="posts-grid">
+        {rest.map(post => (
+          <article class="post-card sharp-card">
+            <div class="post-card-top">
+              <span class="post-tag font-mono" style={`color:${post.accent};`}>{post.tag}</span>
+              <span class="post-read font-mono">{post.readTime} read</span>
+            </div>
+            <h3 class="post-title font-display">{post.title}</h3>
+            <p class="post-excerpt">{post.excerpt}</p>
+            <div class="post-foot">
+              <span class="post-byline font-mono">{post.author} &middot; {post.date}</span>
+              <a href={`/blog/${post.slug}`} class="post-link font-mono" style={`color:${post.accent};`}>
+                Read &rarr;
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div class="newsletter-box">
+        <h3 class="font-display newsletter-title">GET UPDATES FROM THE COMMUNITY</h3>
+        <p class="newsletter-sub">
+          New articles, upcoming exhibitions, and research tips — all from teen scientists.
+        </p>
+        <div class="newsletter-form">
+          <input type="email" placeholder="your@email.com" class="sharp-input" style="flex:1;" />
+          <button class="btn-primary">Subscribe</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</Base>
+
+<style>
+.blog-hero {
+  padding: 80px 0 56px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+.blog-h1 {
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.95;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.blog-h1-white { color: #f5f0e8; }
+.blog-sub {
+  color: rgba(245,240,232,0.5);
+  font-size: 1rem;
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.tag-row {
+  padding: 20px 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tag-btn {
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(245,240,232,0.4);
+  cursor: pointer;
+  transition: all 0.2s;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+.tag-btn:hover,
+.tag-btn--active {
+  background: rgba(34,109,11,0.2);
+  border-color: #226d0b;
+  color: #226d0b;
+}
+
+.blog-body { padding: 40px 24px 100px; }
+
+.featured-wrap { margin-bottom: 44px; }
+.featured-card {
+  background: linear-gradient(135deg, rgba(34,109,11,0.1), rgba(223,166,81,0.05));
+  border: 1px solid rgba(34,109,11,0.25);
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+  position: relative;
+  overflow: hidden;
+}
+.featured-stripe {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.featured-inner { padding: 48px; position: relative; z-index: 1; }
+.featured-tags {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.tag-pill {
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+}
+.tag-pill--green { background: #226d0b; color: white; }
+.featured-cat {
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #226d0b;
+}
+.featured-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: #f5f0e8;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+.featured-excerpt {
+  color: rgba(245,240,232,0.6);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  max-width: 600px;
+  margin-bottom: 24px;
+}
+.featured-meta {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.meta-text {
+  font-size: 0.62rem;
+  color: rgba(245,240,232,0.4);
+  letter-spacing: 0.05em;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 56px;
+}
+.post-card {
+  padding: 28px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+.post-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.post-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.post-read {
+  font-size: 0.55rem;
+  color: rgba(245,240,232,0.25);
+}
+.post-title {
+  font-size: 1.4rem;
+  letter-spacing: 0.03em;
+  color: #f5f0e8;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+.post-excerpt {
+  color: rgba(245,240,232,0.5);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.post-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+}
+.post-byline {
+  font-size: 0.58rem;
+  color: rgba(245,240,232,0.3);
+}
+.post-link {
+  font-size: 0.62rem;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: opacity 0.2s;
+}
+.post-link:hover { opacity: 0.7; }
+
+.newsletter-box {
+  background: rgba(34,109,11,0.08);
+  border: 1px solid rgba(34,109,11,0.2);
+  padding: 40px;
+  text-align: center;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+.newsletter-title {
+  font-size: 2rem;
+  color: #f5f0e8;
+  margin-bottom: 8px;
+}
+.newsletter-sub {
+  color: rgba(245,240,232,0.5);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.newsletter-form {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+</style>

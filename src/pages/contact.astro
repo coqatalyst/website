@@ -1,0 +1,213 @@
+---
+import Base from '../layouts/Base.astro';
+
+const faqs = [
+  { q: 'How do I join CoQatalyst?',               a: 'Join our Discord server — that\'s where the community is.'                      },
+  { q: 'Is there an age limit?',                  a: 'We are primarily focused on high school and early college students, but all young science enthusiasts are welcome.' },
+];
+
+const contactMethods = [
+  { label: 'Discord',   value: 'Join our server',  href: 'https://discord.gg/waitforsometimeig', accent: '#226d0b', rgb: '34,109,11'   },
+  { label: 'Email',     value: 'coqatalyst@gmail.com',                href: 'mailto:coqatalyst@gmail.com',  accent: '#dfa651', rgb: '223,166,81'  },
+];
+---
+
+<Base title="Contact — CoQatalyst" currentPath="/contact">
+  <div style="padding-top:67px;">
+
+    <section class="contact-hero">
+      <div class="contact-orb"></div>
+      <div class="container">
+        <h1 class="font-display contact-h1">
+          <span class="contact-h1-white">LET'S</span>
+          <span class="gradient-text">TALK SCIENCE</span>
+        </h1>
+        <p class="contact-sub">
+          Questions, collaborations, exhibition proposals, or just wanting to say hi.
+        </p>
+      </div>
+    </section>
+
+    <div class="container contact-body">
+      <div class="contact-stack">
+        <div class="contact-section">
+          <div class="section-tag" style="margin-bottom:20px;">Ways to Reach Us</div>
+          <div class="methods-list">
+            {contactMethods.map(m => (
+              <a
+                href={m.href}
+                target="_blank"
+                rel="noreferrer"
+                class="method-card sharp-card"
+                style={`--accent:${m.accent}; --rgb:${m.rgb};`}
+              >
+                <div class="method-label-col">
+                  <span class="method-label font-mono" style={`color:${m.accent};`}>{m.label}</span>
+                  <span class="method-value">{m.value}</span>
+                </div>
+                <span class="method-arrow" style={`color:${m.accent};`}>&rarr;</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div class="contact-section">
+          <div class="section-tag" style="margin-bottom:20px;">FAQ</div>
+          <div class="faq-list" id="faq-list">
+            {faqs.map((faq, i) => (
+              <div class="faq-item" data-index={i}>
+                <button class="faq-btn" aria-expanded="false">
+                  <span class="faq-q">{faq.q}</span>
+                  <span class="faq-icon font-mono">+</span>
+                </button>
+                <div class="faq-body" style="display:none;">
+                  <p class="faq-a">{faq.a}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item') as HTMLElement;
+      const body = item.querySelector('.faq-body') as HTMLElement;
+      const icon = btn.querySelector('.faq-icon') as HTMLElement;
+      const open = body.style.display !== 'none';
+
+      document.querySelectorAll('.faq-item').forEach(el => {
+        const otherBody = el.querySelector('.faq-body') as HTMLElement;
+        const otherIcon = el.querySelector('.faq-icon') as HTMLElement;
+        if (otherBody) otherBody.style.display = 'none';
+        if (otherIcon) {
+          otherIcon.textContent = '+';
+          otherIcon.style.transform = 'none';
+        }
+        (el as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)';
+      });
+
+      if (!open) {
+        body.style.display = 'block';
+        icon.style.transform = 'rotate(45deg)';
+        item.style.borderColor = 'rgba(34,109,11,0.4)';
+      }
+    });
+  });
+</script>
+
+<style>
+.contact-hero {
+  padding: 80px 0 60px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.contact-h1 {
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.95;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.contact-h1-white { color: #f5f0e8; }
+.contact-sub {
+  color: rgba(245,240,232,0.5);
+  font-size: 1rem;
+  max-width: 440px;
+  line-height: 1.7;
+  margin: 0 auto;
+}
+
+.contact-body { 
+  padding: 0 24px 100px; 
+  display: flex;
+  justify-content: center;
+}
+.contact-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  width: 100%;
+  max-width: 600px; 
+}
+
+.methods-list { display: flex; flex-direction: column; gap: 10px; }
+.method-card {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s;
+}
+.method-card:hover { 
+  background: rgba(var(--rgb), 0.08) !important;
+  border-color: rgba(var(--rgb), 0.3);
+}
+.method-label-col { display: flex; flex-direction: column; gap: 3px; }
+.method-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.method-value {
+  font-size: 0.85rem;
+  color: rgba(245,240,232,0.6);
+  font-family: 'Syne', sans-serif;
+}
+.method-arrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.faq-list { display: flex; flex-direction: column; gap: 8px; }
+.faq-item {
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.01);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+.faq-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.faq-q {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #f5f0e8;
+}
+.faq-icon {
+  font-size: 1rem;
+  color: #226d0b;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.faq-body { padding: 0 20px 16px; }
+.faq-a {
+  color: rgba(245,240,232,0.55);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+</style>

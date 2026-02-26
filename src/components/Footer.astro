@@ -1,0 +1,139 @@
+---
+const navLinks = [
+  { href: '/',        label: 'Home'    },
+  { href: '/about',   label: 'About'   },
+  { href: '/blog',    label: 'Blog'    },
+  { href: '/contact', label: 'Contact' },
+];
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+
+    <div class="footer-grid">
+
+      <div class="footer-brand">
+        <div class="brand-row">
+          <img src="/assets/logo.png" alt="CoQatalyst" width="32" height="32" style="border-radius:6px;" />
+          <span class="brand-name">CoQatalyst</span>
+        </div>
+        <p class="brand-desc">
+          Science exhibitions, research discussions, and a community built by teens — for teens.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">Navigate</p>
+        {navLinks.map(link => (
+          <a href={link.href} class="footer-link">{link.label}</a>
+        ))}
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">Community</p>
+        <a
+          href="https://discord.gg/waitforsometimeig"
+          target="_blank"
+          rel="noreferrer"
+          class="btn-outline"
+          style="display:inline-block; margin-bottom:12px;"
+        >
+          Discord &rarr;
+        </a>
+        <p class="footer-made">Made with science</p>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <span class="footer-copy">&copy; 2026 COQATALYST &mdash; ALL RIGHTS RESERVED (pls don steal ts)</span>
+      <div class="footer-accent-line"></div>
+    </div>
+
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: #050505;
+    padding: 60px 0 40px;
+  }
+
+  .footer-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .brand-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #226d0b, #dfa651);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .brand-desc {
+    color: rgba(245,240,232,0.4);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .footer-col { display: flex; flex-direction: column; gap: 0; }
+
+  .footer-col-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #226d0b;
+    margin-bottom: 14px;
+  }
+
+  .footer-link {
+    color: rgba(245,240,232,0.5);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    transition: color 0.2s;
+  }
+  .footer-link:hover { color: #dfa651; }
+
+  .footer-made {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: rgba(245,240,232,0.25);
+    margin-top: 12px;
+  }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: rgba(245,240,232,0.22);
+    letter-spacing: 0.1em;
+  }
+  .footer-accent-line {
+    height: 2px;
+    width: 60px;
+    background: linear-gradient(90deg, #226d0b, #e88f1a);
+  }
+</style>

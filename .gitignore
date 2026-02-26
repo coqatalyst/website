@@ -1,0 +1,7 @@
+# Astro build files
+.astro 
+node_modules
+dist
+
+# Others
+src/env.d.ts

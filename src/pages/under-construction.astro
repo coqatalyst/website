@@ -1,0 +1,338 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Under Construction — CoQatalyst" currentPath="">
+  <div class="uc-root">
+
+    <div class="uc-grid-bg"></div>
+
+    <div class="ring ring--1 anim-spin"></div>
+    <div class="ring ring--2 anim-spin-rev"></div>
+    <div class="ring ring--3"></div>
+
+    <div class="uc-inner">
+      <div class="uc-logo anim-float">
+        <div class="logo-glow"></div>
+        <img src="/assets/logo-icon.png" alt="CoQatalyst" width="100" height="100" />
+      </div>
+
+      <div class="status-tag font-mono anim-slide-in">
+        <span class="status-dot"></span>
+        System Status &mdash; Building
+      </div>
+
+      <h1 class="font-display uc-h1 anim-fade-up">
+        <span class="uc-h1-dim">SOMETHING</span>
+        <span class="gradient-text">BRILLIANT</span>
+        <span class="uc-h1-dim">IS COMING</span>
+      </h1>
+
+      <div class="progress-wrap anim-fade-up d3">
+        <div class="progress-header font-mono">
+          <span>Build progress</span>
+          <span class="progress-pct">73%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+          <div class="progress-pulse"></div>
+        </div>
+        <div class="progress-steps font-mono">
+          <span class="step step--done">Design</span>
+          <span class="step step--done">Content</span>
+          <span class="step step--active">Dev</span>
+          <span class="step">Launch</span>
+        </div>
+      </div>
+
+      <div class="uc-ctas anim-fade-up d4">
+        <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
+          Join Discord &rarr;
+        </a>
+        <a href="/" class="btn-outline">Back to Home</a>
+      </div>
+    </div>
+
+    <div class="uc-footer-sticky">
+      <div class="ticker-wrap anim-fade-up d5">
+        <div class="ticker-track">
+          {[1, 2, 3, 4].map(() => (
+            <div class="ticker-content">
+              {[
+                'Science Exhibitions',
+                'Peer Research',
+                'Discord Community',
+                'Teen Scientists',
+                'CoQatalyst',
+              ].map(text => (
+                <span class="ticker-item font-display">
+                  {text} <span class="ticker-dot">&#10022;</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="corner corner--tl font-mono">CQ&mdash;UC&mdash;01</div>
+    <div class="corner corner--br font-mono">EST. 2026</div>
+
+  </div>
+</Base>
+
+<style>
+  .uc-root {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 80px 0 0;
+  }
+
+  .uc-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(34,109,11,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34,109,11,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .ring--1 { width: 700px; height: 700px; border: 1px dashed rgba(34,109,11,0.18); }
+  .ring--2 { width: 500px; height: 500px; border: 1px dashed rgba(223,166,81,0.12); }
+  .ring--3 { width: 900px; height: 900px; border: 1px solid rgba(255,255,255,0.03); }
+
+  .uc-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 680px;
+    width: 100%;
+    margin: auto 0;
+    padding: 0 24px;
+  }
+
+  .uc-logo {
+    position: relative;
+    margin-bottom: 36px;
+  }
+  .uc-logo img {
+    border-radius: 20px;
+    position: relative;
+    z-index: 1;
+    display: block;
+  }
+  .logo-glow {
+    position: absolute;
+    inset: -16px;
+    border-radius: 36px;
+    background: radial-gradient(circle, rgba(34,109,11,0.35) 0%, transparent 70%);
+    filter: blur(16px);
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.1); }
+  }
+
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #226d0b;
+    background: rgba(34,109,11,0.1);
+    border: 1px solid rgba(34,109,11,0.3);
+    padding: 7px 16px;
+    margin-bottom: 28px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #226d0b;
+    box-shadow: 0 0 8px #226d0b;
+    animation: blink 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .uc-h1 {
+    font-size: clamp(3rem, 9vw, 7.5rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .uc-h1-dim { color: rgba(245,240,232,0.25); }
+
+  .progress-wrap {
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 40px;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+    margin-bottom: 10px;
+  }
+  .progress-pct { color: #dfa651; }
+
+  .progress-track {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 0;
+    position: relative;
+    overflow: visible;
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+    margin-bottom: 14px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 73%;
+    background: linear-gradient(90deg, #226d0b, #dfa651, #e88f1a);
+    position: relative;
+    animation: fillIn 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.6s;
+  }
+  @keyframes fillIn {
+    from { width: 0%; }
+    to   { width: 73%; }
+  }
+  .progress-pulse {
+    position: absolute;
+    top: -3px;
+    left: 73%;
+    width: 2px;
+    height: 12px;
+    background: #e88f1a;
+    box-shadow: 0 0 12px #e88f1a;
+    animation: fillIn 1.8s cubic-bezier(0.22, 1, 0.36, 1) both, pulseLine 1.2s ease-in-out infinite;
+    animation-delay: 0.6s, 2.4s;
+  }
+  @keyframes pulseLine {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .progress-steps {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .step        { color: rgba(245,240,232,0.2); }
+  .step--done  { color: #226d0b; }
+  .step--active {
+    color: #e88f1a;
+    position: relative;
+  }
+  .step--active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 1px;
+    background: #e88f1a;
+    box-shadow: 0 0 6px #e88f1a;
+  }
+
+  .uc-ctas {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 56px;
+  }
+
+  .uc-footer-sticky {
+    width: 100%;
+    z-index: 5;
+    background: #0a0a0a; 
+  }
+
+  .ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid rgba(34,109,11,0.2);
+    border-bottom: 1px solid rgba(34,109,11,0.2);
+    background: rgba(34,109,11,0.06);
+    padding: 14px 0;
+    display: flex;
+    user-select: none;
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    flex-wrap: nowrap;
+    will-change: transform;
+    animation: marquee 40s linear infinite;
+  }
+
+  .ticker-content {
+    display: flex;
+    flex-shrink: 0;
+    gap: 60px;
+    padding-right: 60px;
+  }
+
+  .ticker-item {
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    color: rgba(245,240,232,0.5);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-dot { color: #226d0b; margin: 0 10px; }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .corner {
+    position: fixed;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.15);
+    z-index: 10;
+  }
+  .corner--tl { top: 80px; left: 20px; }
+  .corner--br { bottom: 20px; right: 20px; }
+
+  @media (max-width: 600px) {
+    .ring--1, .ring--2, .ring--3 { display: none; }
+    .uc-h1 { font-size: clamp(2.8rem, 14vw, 5rem); }
+    .ticker-track { animation-duration: 25s; }
+  }
+</style>

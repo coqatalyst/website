@@ -1,0 +1,127 @@
+<div id="movable-bg" aria-hidden="true">
+  <div class="orb" id="orb-green"></div>
+  <div class="orb" id="orb-pink"></div>
+  <div class="orb" id="orb-orange"></div>
+  <div class="orb" id="orb-gold"></div>
+  <div class="orb" id="orb-red"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    interface Orb {
+      el: HTMLElement | null;
+      size: number;
+      baseX: number;
+      baseY: number;
+      lag: number;
+      strength: number;
+      curX: number;
+      curY: number;
+    }
+
+    const W = () => window.innerWidth;
+    const H = () => window.innerHeight;
+
+    const ORBS: Orb[] = [
+      { el: document.getElementById('orb-green'),  size: 600, baseX: 0.75, baseY: 0.15, lag: 0.038, strength: 1.38, curX: 0, curY: 0 },
+      { el: document.getElementById('orb-pink'),   size: 480, baseX: 0.15, baseY: 0.70, lag: 0.012, strength: 1.32, curX: 0, curY: 0 },
+      { el: document.getElementById('orb-orange'), size: 520, baseX: 0.55, baseY: 0.85, lag: 0.018, strength: 1.42, curX: 0, curY: 0 },
+      { el: document.getElementById('orb-gold'),   size: 440, baseX: 0.20, baseY: 0.20, lag: 0.005, strength: 1.30, curX: 0, curY: 0 },
+      { el: document.getElementById('orb-red'),    size: 400, baseX: 0.85, baseY: 0.60, lag: 0.005, strength: 1.35, curX: 0, curY: 0 },
+    ];
+
+    let targetX = 0.5;
+    let targetY = 0.5;
+
+    ORBS.forEach(o => {
+      o.curX = o.baseX * W();
+      o.curY = o.baseY * H();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX / W();
+      targetY = e.clientY / H();
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      targetX = t.clientX / W();
+      targetY = t.clientY / H();
+    }, { passive: true });
+
+    function tick() {
+      const vw = W();
+      const vh = H();
+
+      ORBS.forEach(o => {
+        if (!o.el) return;
+
+        // The destination is the base position + an offset based on cursor distance from center
+        const destX = (o.baseX * vw) + (targetX - 0.5) * (vw * o.strength);
+        const destY = (o.baseY * vh) + (targetY - 0.5) * (vh * o.strength);
+
+        // Smoothly interpolate
+        o.curX += (destX - o.curX) * o.lag;
+        o.curY += (destY - o.curY) * o.lag;
+
+        const half = o.size / 2;
+        o.el.style.transform = `translate3d(${o.curX - half}px, ${o.curY - half}px, 0)`;
+      });
+
+      requestAnimationFrame(tick);
+    }
+
+    tick();
+  });
+</script>
+
+<style>
+  #ambient-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1; 
+    pointer-events: none;
+    overflow: hidden;
+    background: #0a0a0a; 
+  }
+
+  .orb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  #orb-green {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(34,109,11,0.4) 0%, transparent 70%);
+    filter: blur(80px);
+  }
+  #orb-pink {
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(255,209,209,0.3) 0%, transparent 70%);
+    filter: blur(70px);
+  }
+  #orb-orange {
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(232,143,26,0.3) 0%, transparent 70%);
+    filter: blur(80px);
+  }
+  #orb-gold {
+    width: 440px; height: 440px;
+    background: radial-gradient(circle, rgba(223,166,81,0.3) 0%, transparent 70%);
+    filter: blur(60px);
+  }
+  #orb-red {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(203,27,58,0.3) 0%, transparent 70%);
+    filter: blur(70px);
+  }
+
+  @media (max-width: 768px) {
+    .orb { opacity: 0.6; } 
+  }
+</style>
