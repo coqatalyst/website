@@ -3,7 +3,7 @@
 export const SOCIALS = {
   DISCORD: {
     label: 'Discord',
-    href: 'https://discord.gg/waitforsometimeig',
+    href: 'https://discord.gg/8gyA2E3a',
     value: 'Join our server',
     accent: '#226d0b',
     rgb: '34,109,11',
