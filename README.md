@@ -23,7 +23,3 @@ npm run preview
 
 - **Framework**: [Astro](https://astro.build/) 4.11.0
 - **Language**: JavaScript/Astro
-
-## Project Structure
-
-See [DOCS](DOCS.md) for comprehensive documentation.

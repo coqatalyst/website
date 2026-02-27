@@ -205,6 +205,11 @@ body::before {
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: var(--green); }
 
+@media (min-width: 769px) {
+  * { transition: all 0.2s ease; }
+}
+
+/* Reduced animations and optimizations for Mobile*/
 @media (max-width: 768px) {
   .hide-mobile  { display: none !important; }
   .show-mobile  { display: flex !important; }
@@ -213,4 +218,59 @@ body::before {
   .grid-4col    { grid-template-columns: repeat(2, 1fr) !important; }
   .hero-grid    { grid-template-columns: 1fr !important; }
   .values-grid  { grid-template-columns: 1fr !important; }
+
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideIn  { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes float    { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  
+  .anim-fade-up  { animation: fadeUp  0.4s ease both !important; }
+  .anim-slide-in { animation: slideIn 0.3s ease both !important; }
+  .anim-float    { animation: float   6s ease-in-out infinite !important; }
+  .anim-spin     { animation: spinSlow 40s linear infinite !important; }
+  .anim-spin-rev { animation: spinSlow 60s linear infinite reverse !important; }
+  
+  * { 
+    transition: none !important;
+    animation-duration: 0s !important;
+  }
+  
+  .anim-fade-up,
+  .anim-slide-in,
+  .anim-float,
+  .anim-spin,
+  .anim-spin-rev,
+  .anim-marquee {
+    animation-duration: inherit !important;
+  }
+
+  *:hover {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .sharp-card,
+  .sharp-card-green {
+    backdrop-filter: none !important;
+  }
+
+  body::before {
+    opacity: 0.1 !important;
+  }
+
+  .btn-primary:hover,
+  .btn-outline:hover,
+  .nav-link:hover,
+  .nav-link:hover::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .btn-primary:active {
+    background: linear-gradient(135deg, #2e9010, var(--orange)) !important;
+    opacity: 0.8;
+  }
+
+  .btn-outline:active {
+    opacity: 0.8;
+  }
 }

@@ -1,18 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
+import { CONTACT_METHODS } from '../config/socials';
+
+const baseUrl = import.meta.env.BASE_URL;
 
 const faqs = [
   { q: 'How do I join CoQatalyst?',               a: 'Join our Discord server — that\'s where the community is.'                      },
   { q: 'Is there an age limit?',                  a: 'We are primarily focused on high school and early college students, but all young science enthusiasts are welcome.' },
 ];
 
-const contactMethods = [
-  { label: 'Discord',   value: 'Join our server',  href: 'https://discord.gg/waitforsometimeig', accent: '#226d0b', rgb: '34,109,11'   },
-  { label: 'Email',     value: 'coqatalyst@gmail.com',                href: 'mailto:coqatalyst@gmail.com',  accent: '#dfa651', rgb: '223,166,81'  },
-];
+const contactMethods = CONTACT_METHODS;
 ---
 
-<Base title="Contact — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}contact`}>
+<Base title="Contact — CoQatalyst" description="Get in touch with CoQatalyst. Join our Discord, email us for collaborations, exhibitions, or partnership opportunities. Let's talk science!" currentPath={`${baseUrl}contact`}>
   <div style="padding-top:67px;">
 
     <section class="contact-hero">
@@ -48,6 +48,16 @@ const contactMethods = [
                 <span class="method-arrow" style={`color:${m.accent};`}>&rarr;</span>
               </a>
             ))}
+          </div>
+        </div>
+
+        <div class="contact-section">
+          <div class="section-tag" style="margin-bottom:20px;">Partner With Us</div>
+          <div class="partner-card sharp-card">
+            <p class="partner-text">
+              Are you passionate about science and innovation? Let's collaborate to inspire the next generation of scientists and researchers.
+            </p>
+            <a href="mailto:coqatalyst@gmail.com?subject=Partnership%20Inquiry" class="partner-link">Inquire About Partnerships &rarr;</a>
           </div>
         </div>
 
@@ -209,5 +219,33 @@ const contactMethods = [
   color: rgba(245,240,232,0.55);
   font-size: 0.85rem;
   line-height: 1.7;
+}
+
+.partner-card {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(34,109,11,0.1) 0%, rgba(223,166,81,0.05) 100%);
+  border: 1px solid rgba(34,109,11,0.3);
+}
+.partner-text {
+  color: rgba(245,240,232,0.75);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.partner-link {
+  display: inline-block;
+  color: #dfa651;
+  text-decoration: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  border: 1px solid rgba(223,166,81,0.4);
+  transition: all 0.2s;
+  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%);
+}
+.partner-link:hover {
+  background: rgba(223,166,81,0.1);
+  border-color: #dfa651;
 }
 </style>

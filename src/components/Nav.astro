@@ -1,4 +1,6 @@
 ---
+import { SOCIALS } from '../config/socials';
+
 interface Props {
   currentPath?: string;
 }
@@ -6,9 +8,10 @@ const { currentPath = '/' } = Astro.props;
 
 const baseUrl = import.meta.env.BASE_URL;
 const links = [
-  { href: baseUrl,        label: 'Home'    },
+  { href: baseUrl,             label: 'Home'    },
   { href: baseUrl + 'about',   label: 'About'   },
   { href: baseUrl + 'blog',    label: 'Blog'    },
+  { href: baseUrl + 'events',  label: 'Events'  },
   { href: baseUrl + 'contact', label: 'Contact' },
 ];
 ---
@@ -32,7 +35,7 @@ const links = [
         </a>
       ))}
       <a
-        href="https://discord.gg/waitforsometimeig"
+        href={SOCIALS.DISCORD.href}
         target="_blank"
         rel="noreferrer"
         class="btn-primary"
@@ -56,7 +59,7 @@ const links = [
       </a>
     ))}
     <a
-      href="https://discord.gg/waitforsometimeig"
+      href={SOCIALS.DISCORD.href}
       target="_blank"
       rel="noreferrer"
       class="btn-primary"
@@ -86,13 +89,11 @@ const links = [
     top: 0; left: 0; right: 0;
     z-index: 100;
   }
-
   .top-bar {
     height: 3px;
     background: linear-gradient(90deg, #226d0b, #dfa651, #e88f1a, #cb1b3a, #226d0b);
     background-size: 200%;
   }
-
   .nav-inner {
     background: rgba(10,10,10,0.88);
     backdrop-filter: blur(20px);
@@ -106,7 +107,6 @@ const links = [
     margin: 0 auto;
     padding: 0 24px;
   }
-
   .nav-logo {
     display: flex;
     align-items: center;
@@ -123,13 +123,11 @@ const links = [
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 28px;
   }
-
   .nav-burger {
     background: none;
     border: none;
@@ -139,7 +137,6 @@ const links = [
     line-height: 1;
     padding: 4px 8px;
   }
-
   .nav-drawer {
     flex-direction: column;
     gap: 20px;
@@ -148,8 +145,8 @@ const links = [
     border-bottom: 1px solid rgba(34,109,11,0.3);
   }
   .nav-drawer .nav-link { font-size: 1rem; }
-
   @media (max-width: 768px) {
     .nav-burger { display: flex !important; }
+    .nav-links  { display: none !important; }
   }
 </style>

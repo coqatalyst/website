@@ -1,5 +1,10 @@
-<meta http-equiv="refresh" content={`0;url=${import.meta.env.BASE_URL}under-construction`} />
+---
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<meta http-equiv="refresh" content={`0;url=${baseUrl}under-construction`} />
 
 <script is:inline>
-  window.location.pathname = `${import.meta.env.BASE_URL}under-construction`;
+  const baseUrl = import.meta.env.BASE_URL;
+  window.location.pathname = `${baseUrl}under-construction`;
 </script>

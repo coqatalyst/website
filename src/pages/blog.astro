@@ -1,74 +1,21 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
 
-const posts = [
-  {
-    slug: 'blah-blah1',
-    tag: 'Research',
-    title: 'Something 1',
-    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    author: 'Dude1',
-    date: 'Feb 1, 2026',
-    readTime: '7 min',
-    accent: '#226d0b',
-    featured: true,
-  },
-  {
-    slug: 'blah-blah2',
-    tag: 'Events',
-    title: "Something 2",
-    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    author: 'Dude2',
-    date: 'Feb 1, 2026',
-    readTime: '5 min',
-    accent: '#e88f1a',
-    featured: false,
-  },
-  {
-    slug: 'blah-blah3',
-    tag: 'Community',
-    title: 'Something 3',
-    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    author: 'Dude3',
-    date: 'Feb 1, 2026',
-    readTime: '4 min',
-    accent: '#dfa651',
-    featured: false,
-  },
-  {
-    slug: 'blah-blah4',
-    tag: 'Science',
-    title: "Something 4",
-    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    author: 'Dude4',
-    date: 'Feb 1, 2026',
-    readTime: '6 min',
-    accent: '#cb1b3a',
-    featured: false,
-  },
-  {
-    slug: 'blah-blah5',
-    tag: 'Community',
-    title: 'Something 5',
-    excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    author: 'Dude5',
-    date: 'Feb 1, 2026',
-    readTime: '8 min',
-    accent: '#226d0b',
-    featured: false,
-  },
-];
+const baseUrl = import.meta.env.BASE_URL;
 
-const featured = posts.find(p => p.featured);
-const rest = posts.filter(p => !p.featured);
-const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
+const allPosts = (await getCollection('blog')).sort((a, b) => {
+  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+const featured = allPosts.find(p => p.data.featured);
+const rest     = allPosts.filter(p => !p.data.featured);
 ---
 
-<Base title="Blog — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}blog`}>
+<Base title="Blog — CoQatalyst" description="Read insightful articles on research, STEM, AI, and machine learning written by members of the CoQatalyst teen science community." currentPath={`${baseUrl}blog`}>
   <div style="padding-top:67px;">
 
     <section class="blog-hero">
-      <div class="blog-hero-orb"></div>
       <div class="container">
         <div class="section-tag" style="margin-bottom:16px;">CoQatalyst Blog</div>
         <h1 class="font-display blog-h1">
@@ -76,55 +23,67 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
           <span class="gradient-text">OUR COMMUNITY</span>
         </h1>
         <p class="blog-sub">
-          Research tips, community stories, science deep-dives... Everything written by teens in the CoQatalyst community.
+          Research tips, community stories, science deep-dives — everything written by teens in the CoQatalyst community.
         </p>
       </div>
     </section>
 
-    <div class="container tag-row">
-      {tags.map((tag, i) => (
-        <button class={`tag-btn font-mono ${i === 0 ? 'tag-btn--active' : ''}`}>
-          {tag}
-        </button>
-      ))}
+    <div class="container search-wrap">
+      <div class="search-box">
+        <span class="search-icon font-mono">&#8981;</span>
+        <input
+          id="blog-search"
+          class="search-input"
+          type="text"
+          placeholder="Search posts by title..."
+          autocomplete="off"
+        />
+        <span class="search-clear font-mono" id="search-clear" style="display:none;">&#10005;</span>
+      </div>
+      <p class="search-count font-mono" id="search-count"></p>
     </div>
 
     <div class="container blog-body">
 
       {featured && (
-        <div class="featured-wrap">
+        <div class="featured-wrap" data-post-title={featured.data.title.toLowerCase()} id="featured-block">
           <div class="featured-card">
             <div class="stripe-accent featured-stripe"></div>
             <div class="featured-inner">
               <div class="featured-tags">
                 <span class="tag-pill tag-pill--green font-mono">Featured</span>
-                <span class="featured-cat font-mono">{featured.tag}</span>
+                <span class="featured-cat font-mono">{featured.data.tag}</span>
               </div>
-              <h2 class="font-display featured-title">{featured.title}</h2>
-              <p class="featured-excerpt">{featured.excerpt}</p>
+              <h2 class="font-display featured-title">{featured.data.title}</h2>
+              <p class="featured-excerpt">{featured.data.excerpt}</p>
               <div class="featured-meta">
                 <span class="meta-text font-mono">
-                  {featured.author} &middot; {featured.date} &middot; {featured.readTime} read
+                  {featured.data.author} &middot; {featured.data.date}
                 </span>
-                <a href={`${import.meta.env.BASE_URL}blog/${featured.slug}`} class="btn-primary">Read &rarr;</a>
+                <a href={`${baseUrl}blog/${featured.slug}`} class="btn-primary">Read &rarr;</a>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div class="posts-grid">
+      <div class="posts-grid" id="posts-grid">
         {rest.map(post => (
-          <article class="post-card sharp-card">
+          <article class="post-card sharp-card" data-title={post.data.title.toLowerCase()}>
             <div class="post-card-top">
-              <span class="post-tag font-mono" style={`color:${post.accent};`}>{post.tag}</span>
-              <span class="post-read font-mono">{post.readTime} read</span>
+              <span class="post-tag font-mono" style={`color:${post.data.accent};`}>
+                {post.data.tag}
+              </span>
             </div>
-            <h3 class="post-title font-display">{post.title}</h3>
-            <p class="post-excerpt">{post.excerpt}</p>
+            <h3 class="post-title font-display">{post.data.title}</h3>
+            <p class="post-excerpt">{post.data.excerpt}</p>
             <div class="post-foot">
-              <span class="post-byline font-mono">{post.author} &middot; {post.date}</span>
-              <a href={`${import.meta.env.BASE_URL}blog/${post.slug}`} class="post-link font-mono" style={`color:${post.accent};`}>
+              <span class="post-byline font-mono">{post.data.author} &middot; {post.data.date}</span>
+              <a
+                href={`${baseUrl}blog/${post.slug}`}
+                class="post-link font-mono"
+                style={`color:${post.data.accent};`}
+              >
                 Read &rarr;
               </a>
             </div>
@@ -132,20 +91,74 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
         ))}
       </div>
 
-      <div class="newsletter-box">
-        <h3 class="font-display newsletter-title">GET UPDATES FROM THE COMMUNITY</h3>
-        <p class="newsletter-sub">
-          New articles, upcoming exhibitions, and research tips — all from teen scientists.
-        </p>
-        <div class="newsletter-form">
-          <input type="email" placeholder="your@email.com" class="sharp-input" style="flex:1;" />
-          <button class="btn-primary">Subscribe</button>
-        </div>
+      <div id="no-results" class="no-results" style="display:none;">
+        <div class="no-results-title font-display">NO POSTS FOUND</div>
+        <p class="no-results-sub font-mono">Try a different search term.</p>
       </div>
+
+      {allPosts.length === 0 && (
+        <div class="empty-blog">
+          <div class="font-display empty-blog-title">NO POSTS YET</div>
+          <p class="font-mono empty-blog-sub">
+            Drop a <code>.md</code> file in <code>src/content/blog/</code> to get started.
+          </p>
+        </div>
+      )}
+
+
 
     </div>
   </div>
 </Base>
+
+<script>
+  const searchInput   = document.getElementById('blog-search')   as HTMLInputElement;
+  const searchClear   = document.getElementById('search-clear')   as HTMLElement;
+  const searchCount   = document.getElementById('search-count')   as HTMLElement;
+  const featuredBlock = document.getElementById('featured-block') as HTMLElement | null;
+  const postsGrid     = document.getElementById('posts-grid')     as HTMLElement;
+  const noResults     = document.getElementById('no-results')     as HTMLElement;
+
+  const allCards = Array.from(postsGrid?.querySelectorAll<HTMLElement>('.post-card') ?? []);
+
+  function applySearch(query: string) {
+    const q = query.trim().toLowerCase();
+    searchClear.style.display = q.length > 0 ? 'inline' : 'none';
+
+    // Featured
+    if (featuredBlock) {
+      const ft = featuredBlock.dataset.postTitle ?? '';
+      featuredBlock.style.display = (q === '' || ft.includes(q)) ? 'block' : 'none';
+    }
+
+    // Grid
+    let visible = 0;
+    allCards.forEach(card => {
+      const title = card.dataset.title ?? '';
+      const show  = q === '' || title.includes(q);
+      card.style.display = show ? 'block' : 'none';
+      if (show) visible++;
+    });
+
+    const featVisible = featuredBlock && featuredBlock.style.display !== 'none' ? 1 : 0;
+    const total = visible + featVisible;
+
+    if (q === '') {
+      searchCount.textContent = '';
+      noResults.style.display = 'none';
+    } else {
+      searchCount.textContent = total === 0 ? 'No results' : `${total} result${total !== 1 ? 's' : ''}`;
+      noResults.style.display  = total === 0 ? 'block' : 'none';
+    }
+  }
+
+  searchInput?.addEventListener('input', () => applySearch(searchInput.value));
+  searchClear?.addEventListener('click', () => {
+    searchInput.value = '';
+    searchInput.focus();
+    applySearch('');
+  });
+</script>
 
 <style>
 .blog-hero {
@@ -169,32 +182,58 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
   line-height: 1.7;
 }
 
-.tag-row {
-  padding: 20px 24px;
+.search-wrap {
+  padding: 32px 24px 8px;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
 }
-.tag-btn {
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 14px 18px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  transition: border-color 0.2s;
+}
+.search-box:focus-within {
+  border-color: #226d0b;
+  box-shadow: 0 0 0 1px rgba(34,109,11,0.2);
+}
+.search-icon {
+  font-size: 1.1rem;
+  color: rgba(245,240,232,0.3);
+  flex-shrink: 0;
+}
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #f5f0e8;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem;
+}
+.search-input::placeholder { color: rgba(245,240,232,0.28); }
+.search-clear {
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: rgba(245,240,232,0.35);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.search-clear:hover { color: #cb1b3a; }
+.search-count {
   font-size: 0.62rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(245,240,232,0.4);
-  cursor: pointer;
-  transition: all 0.2s;
-  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
-}
-.tag-btn:hover,
-.tag-btn--active {
-  background: rgba(34,109,11,0.2);
-  border-color: #226d0b;
-  color: #226d0b;
+  color: rgba(245,240,232,0.3);
+  min-height: 1em;
 }
 
-.blog-body { padding: 40px 24px 100px; }
+.blog-body { padding: 32px 24px 100px; }
 
 .featured-wrap { margin-bottom: 44px; }
 .featured-card {
@@ -258,7 +297,7 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
 
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
   margin-bottom: 56px;
 }
@@ -270,20 +309,11 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
-.post-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
+.post-card-top { margin-bottom: 14px; }
 .post-tag {
   font-size: 0.58rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-}
-.post-read {
-  font-size: 0.55rem;
-  color: rgba(245,240,232,0.25);
 }
 .post-title {
   font-size: 1.4rem;
@@ -317,29 +347,31 @@ const tags = ['All', 'Research', 'Community', 'Events', 'Science'];
 }
 .post-link:hover { opacity: 0.7; }
 
-.newsletter-box {
-  background: rgba(34,109,11,0.08);
-  border: 1px solid rgba(34,109,11,0.2);
-  padding: 40px;
+.no-results, .empty-blog {
+  padding: 80px 24px;
   text-align: center;
-  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }
-.newsletter-title {
-  font-size: 2rem;
-  color: #f5f0e8;
-  margin-bottom: 8px;
+.no-results-title, .empty-blog-title {
+  font-size: 2.5rem;
+  color: rgba(245,240,232,0.2);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
 }
-.newsletter-sub {
-  color: rgba(245,240,232,0.5);
-  font-size: 0.9rem;
-  margin-bottom: 24px;
-  line-height: 1.6;
+.no-results-sub, .empty-blog-sub {
+  font-size: 0.72rem;
+  color: rgba(245,240,232,0.2);
+  letter-spacing: 0.1em;
 }
-.newsletter-form {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  max-width: 480px;
-  margin: 0 auto;
+.empty-blog-sub code {
+  background: rgba(34,109,11,0.15);
+  border: 1px solid rgba(34,109,11,0.3);
+  padding: 2px 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: #226d0b;
+
+@media (max-width: 600px) {
+  .featured-inner { padding: 24px; }
+  .posts-grid { grid-template-columns: 1fr; }
 }
 </style>

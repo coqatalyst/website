@@ -1,30 +1,20 @@
 ---
 import Base from '../layouts/Base.astro';
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const team = [
   { 
-    name: 'bruh 1',       
-    role: 'QWERTYUIOP',       
-    initial: 'A', 
-    bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.' 
+    name: 'Krishna Paliwal',       
+    role: 'Founder & CTO',       
+    image: 'assets/pfp1.jpeg',
+    bio: 'he does all the TECHY stuff, the website, submission, hosting and everything else.' 
   },
   { 
-    name: 'dude 2', 
-    role: 'LKJHGFDSA',   
-    initial: 'Z', 
-    bio: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.' 
-  },
-  { 
-    name: 'bruv 3', 
-    role: 'MNBVCXZ',      
-    initial: 'P', 
-    bio: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.' 
-  },
-  { 
-    name: 'random ahh 4',  
-    role: 'ZAQWSXCD', 
-    initial: 'L', 
-    bio: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui.' 
+    name: 'Ayush Nigam', 
+    role: 'Co-Founder & CMO',   
+    image: 'assets/pfp2.jpeg',
+    bio: 'He is the manager, does all the social media and communications and event hosting.' 
   },
 ];
 
@@ -39,7 +29,7 @@ const values = [
 ];
 ---
 
-<Base title="About — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}about`}>
+<Base title="About CoQatalyst" description="Learn about CoQatalyst's mission to empower teen scientists and foster rigorous research through exhibitions, competitions, and community collaboration." currentPath={`${baseUrl}about`}>
   <div style="padding-top:67px;">
 
     <section class="about-hero">
@@ -110,7 +100,13 @@ const values = [
         <div class="team-grid">
           {team.map(member => (
             <div class="sharp-card team-card">
-              <div class="team-avatar font-display">{member.initial}</div>
+              <div class="team-avatar">
+                <img 
+                  src={`${baseUrl}${member.image}`} 
+                  alt={member.name} 
+                  style="width: 100%; height: 100%; object-fit: cover;"
+                />
+              </div>
               <div class="team-name font-display">{member.name}</div>
               <div class="team-role font-mono">{member.role}</div>
               <p class="team-bio">{member.bio}</p>
@@ -263,15 +259,46 @@ const values = [
   transition: transform 0.2s;
 }
 .team-card:hover { transform: translateY(-4px); }
+
 .team-avatar {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, rgba(34,109,11,0.2), rgba(223,166,81,0.2));
-  border: 1px solid rgba(34,109,11,0.3);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem;
-  color: #dfa651;
-  margin-bottom: 16px;
-  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  width: 120px; 
+  height: 120px;
+  position: relative;
+  margin-bottom: 24px;
+  
+  padding: 3px; 
+  background: linear-gradient(135deg, #226d0b, #dfa651);
+  
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.team-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  transition: transform 0.5s ease;
+}
+
+.team-card:hover .team-avatar {
+  transform: scale(1.05) rotate(2deg);
+  background: linear-gradient(135deg, #39b512, #ffc163); /* Brightens border */
+  box-shadow: 0 0 20px rgba(34, 109, 11, 0.3);
+}
+.team-card:hover .team-avatar img {
+  transform: scale(1.1); 
+}
+.team-card {
+  padding: 32px;
+  transition: all 0.3s ease;
+  background: #0a0a0a;
+  border: 1px solid rgba(245, 240, 232, 0.05);
+}
+.team-card:hover {
+  border-color: rgba(223, 166, 81, 0.3);
+  background: rgba(255, 255, 255, 0.02);
 }
 .team-name {
   font-size: 1.3rem;

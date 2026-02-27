@@ -1,0 +1,173 @@
+<div id="cursor-dot"  aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const dot  = document.getElementById('cursor-dot')!;
+    const ring = document.getElementById('cursor-ring')!;
+
+    let cursorActive = false;
+
+    let mx = -100, my = -100; // mouse
+    let rx = -100, ry = -100; // ring
+
+    let isHovered  = false;
+    let isClicking = false;
+
+    const isTouchOnly = window.matchMedia('(hover: none)').matches;
+    if (isTouchOnly) return;
+
+    document.documentElement.style.cursor = 'none';
+    const hideNative = document.createElement('style');
+    hideNative.textContent = `*, *::before, *::after { cursor: none !important; }`;
+    document.head.appendChild(hideNative);
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
+
+      if (!cursorActive) {
+        cursorActive = true;
+        dot.style.opacity  = '1';
+        ring.style.opacity = '1';
+      }
+    }, { passive: true });
+
+    const INTERACTIVE = 'a, button, [role="button"], input, textarea, select, label, .tag-btn, .nav-link, .team-card';
+
+    document.addEventListener('mouseover', e => {
+      if ((e.target as Element).closest(INTERACTIVE)) {
+        isHovered = true;
+        dot.classList.add('dot--hover');
+        ring.classList.add('ring--hover');
+      }
+    }, { passive: true });
+
+    document.addEventListener('mouseout', e => {
+      if ((e.target as Element).closest(INTERACTIVE)) {
+        isHovered = false;
+        dot.classList.remove('dot--hover');
+        ring.classList.remove('ring--hover');
+      }
+    }, { passive: true });
+
+    document.addEventListener('mousedown', () => {
+      isClicking = true;
+      dot.classList.add('dot--click');
+      ring.classList.add('ring--click');
+    }, { passive: true });
+
+    document.addEventListener('mouseup', () => {
+      isClicking = false;
+      dot.classList.remove('dot--click');
+      ring.classList.remove('ring--click');
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => {
+      dot.style.opacity  = '0';
+      ring.style.opacity = '0';
+    }, { passive: true });
+
+    document.addEventListener('mouseenter', () => {
+      dot.style.opacity  = '1';
+      ring.style.opacity = '1';
+    }, { passive: true });
+
+    const LAG = 0.12; 
+
+    function tick() {
+      dot.style.transform  = `translate(${mx}px, ${my}px)`;
+      rx += (mx - rx) * LAG;
+      ry += (my - ry) * LAG;
+      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  })();
+</script>
+
+<style is:global>
+  #cursor-dot,
+  #cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 99999;
+    opacity: 0;
+    will-change: transform;
+    transition: opacity 0.3s ease;
+  }
+
+  #cursor-dot {
+    width: 10px; 
+    height: 10px;
+    background: #226d0b;
+    margin-left: -5px; 
+    margin-top: -5px;
+
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    transition:
+      opacity 0.3s ease,
+      width 0.2s ease,
+      height 0.2s ease,
+      background 0.2s ease,
+      clip-path 0.2s ease;
+  }
+
+  #cursor-dot.dot--hover {
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    margin-top: -3px;
+    background: #dfa651;
+    clip-path: circle(50%);
+  }
+
+  #cursor-dot.dot--click {
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    background: #cb1b3a;
+  }
+
+  #cursor-ring {
+    width: 48px; 
+    height: 48px;
+    margin-left: -24px; 
+    margin-top: -24px;
+    border: 2px solid rgba(34, 109, 11, 0.6);
+    border-radius: 4px; 
+    rotate: 45deg;
+    transition:
+      opacity 0.3s ease,
+      width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      margin 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      border-color 0.2s ease,
+      background 0.2s ease,
+      rotate 0.4s ease;
+  }
+
+  #cursor-ring.ring--hover {
+    width: 70px; 
+    height: 70px;
+    margin-left: -35px;
+    margin-top: -35px;
+    border-color: rgba(223, 166, 81, 0.5);
+    background: rgba(223, 166, 81, 0.1);
+    rotate: 0deg;
+    border-radius: 8px;
+  }
+
+  #cursor-ring.ring--click {
+    width: 30px;
+    height: 30px;
+    margin-left: -15px;
+    margin-top: -15px;
+    border-color: rgba(203, 27, 58, 0.8);
+    background: rgba(203, 27, 58, 0.15);
+  }
+</style>

@@ -1,8 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import { SOCIALS } from '../config/socials';
+
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
-<Base title="Under Construction — CoQatalyst" currentPath={`${import.meta.env.BASE_URL}under-construction`}>
+<Base title="Under Construction — CoQatalyst" currentPath={`${baseUrl}under-construction`}>
   <div class="uc-root">
 
     <div class="uc-grid-bg"></div>
@@ -14,7 +17,7 @@ import Base from '../layouts/Base.astro';
     <div class="uc-inner">
       <div class="uc-logo anim-float">
         <div class="logo-glow"></div>
-        <img src={`${import.meta.env.BASE_URL}assets/logo-icon.png`} alt="CoQatalyst" width="100" height="100" />
+        <img src={`${baseUrl}assets/logo-icon.png`} alt="CoQatalyst" width="100" height="100" />
       </div>
 
       <div class="status-tag font-mono anim-slide-in">
@@ -46,10 +49,10 @@ import Base from '../layouts/Base.astro';
       </div>
 
       <div class="uc-ctas anim-fade-up d4">
-        <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
+        <a href={SOCIALS.DISCORD.href} target="_blank" rel="noreferrer" class="btn-primary">
           Join Discord &rarr;
         </a>
-        <a href={import.meta.env.BASE_URL} class="btn-outline">Back to Home</a>
+        <a href={baseUrl} class="btn-outline">Back to Home</a>
       </div>
     </div>
 

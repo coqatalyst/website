@@ -3,6 +3,9 @@ import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Background from '../components/Background.astro';
+import CustomCursor from '../components/CustomCursor.astro';
+
+const baseUrl = import.meta.env.BASE_URL;
 
 interface Props {
   title?: string;
@@ -23,12 +26,17 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="keywords" content="CoQatalyst, teen research, science community, exhibitions, competitions, AI, machine learning" />
+    <meta name="language" content="English" />
+    <meta name="author" content="CoQatalyst" />
+
     <title>{title}</title>
-    <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}assets/logo-icon.png`} />
+    <link rel="icon" type="image/png" href={`${baseUrl}assets/logo-icon.png`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
+    <CustomCursor />
     <Background />
     <div id="page-wrap">
       <Nav currentPath={currentPath} />

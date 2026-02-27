@@ -1,0 +1,394 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+const baseUrl = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props:  { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props as Props;
+const { Content } = await post.render();
+---
+
+<Base
+  title={`${post.data.title} — CoQatalyst`}
+  description={post.data.excerpt}
+  currentPath={`${baseUrl}blog/${post.slug}`}
+>
+  <div style="padding-top:67px;">
+
+    <header class="post-header">
+      <div class="post-header-bg"></div>
+      <div class="container post-header-inner">
+
+        <nav class="breadcrumb font-mono">
+          <a href={baseUrl} class="bc-link">Home</a>
+          <span class="bc-sep">/</span>
+          <a href={`${baseUrl}blog`} class="bc-link">Blog</a>
+          <span class="bc-sep">/</span>
+          <span class="bc-current">{post.data.title}</span>
+        </nav>
+
+        <div class="post-meta-row">
+          <span
+            class="post-tag font-mono"
+            style={`color:${post.data.accent}; border-color:${post.data.accent}44;`}
+          >
+            {post.data.tag}
+          </span>
+          <span class="post-meta-txt font-mono">
+            {post.data.author} &middot; {post.data.date}
+          </span>
+        </div>
+
+        <h1 class="font-display post-title">{post.data.title}</h1>
+
+        <p class="post-excerpt">{post.data.excerpt}</p>
+
+        <div class="post-accent-line" style={`background: linear-gradient(90deg, ${post.data.accent}, #dfa651);`}></div>
+
+      </div>
+    </header>
+
+    <div class="container post-layout">
+      <article class="post-content prose">
+        <Content />
+      </article>
+
+      <aside class="post-sidebar">
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Author</div>
+          <div class="sidebar-author">
+            <div>
+              <div class="author-name">{post.data.author}</div>
+              <div class="author-tag font-mono" style={`color:${post.data.accent};`}>{post.data.tag}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Published</div>
+          <div class="sidebar-date">{post.data.date}</div>
+        </div>
+
+        <a href={`${baseUrl}blog`} class="btn-outline sidebar-back">
+          &larr; All Posts
+        </a>
+      </aside>
+    </div>
+
+    <div class="container post-footer">
+      <a href={`${baseUrl}blog`} class="btn-primary">
+        &larr; Back to Blog
+      </a>
+      <a href={`${baseUrl}contact`} class="btn-outline">
+        Submit Your Own Post
+      </a>
+    </div>
+
+  </div>
+</Base>
+
+<style>
+.post-header {
+  padding: 72px 0 56px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.post-header-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(34,109,11,0.05) 0%, transparent 100%);
+  pointer-events: none;
+}
+.post-header-inner { position: relative; z-index: 1; }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.bc-link {
+  color: rgba(245,240,232,0.4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.bc-link:hover { color: #dfa651; }
+.bc-sep { color: rgba(245,240,232,0.2); }
+.bc-current {
+  color: rgba(245,240,232,0.7);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.post-tag {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
+}
+.post-meta-txt {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: rgba(245,240,232,0.35);
+}
+
+.post-title {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #f5f0e8;
+  margin-bottom: 20px;
+  max-width: 900px;
+}
+
+.post-excerpt {
+  font-size: 1.1rem;
+  color: rgba(245,240,232,0.55);
+  line-height: 1.7;
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+
+.post-accent-line {
+  height: 3px;
+  width: 80px;
+  border-radius: 2px;
+}
+
+.post-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 56px;
+  padding: 56px 24px 40px;
+  align-items: start;
+}
+
+.prose {
+  color: rgba(245,240,232,0.75);
+  font-size: 1rem;
+  line-height: 1.85;
+  min-width: 0;
+}
+.prose :global(h2) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  color: #f5f0e8;
+  margin: 48px 0 16px;
+  line-height: 1;
+}
+.prose :global(h3) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: rgba(245,240,232,0.85);
+  margin: 32px 0 12px;
+  line-height: 1;
+}
+.prose :global(h4) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #226d0b;
+  margin: 24px 0 8px;
+}
+.prose :global(p) {
+  margin: 0 0 20px;
+}
+.prose :global(a) {
+  color: #dfa651;
+  text-decoration: underline;
+  text-decoration-color: rgba(223,166,81,0.4);
+  transition: text-decoration-color 0.2s;
+}
+.prose :global(a:hover) {
+  text-decoration-color: #dfa651;
+}
+.prose :global(strong) {
+  color: #f5f0e8;
+  font-weight: 700;
+}
+.prose :global(em) {
+  color: rgba(245,240,232,0.65);
+  font-style: italic;
+}
+.prose :global(ul),
+.prose :global(ol) {
+  margin: 0 0 20px 20px;
+}
+.prose :global(li) {
+  margin-bottom: 8px;
+  color: rgba(245,240,232,0.7);
+}
+.prose :global(li::marker) { color: #226d0b; }
+.prose :global(blockquote) {
+  border-left: 3px solid #226d0b;
+  margin: 28px 0;
+  padding: 16px 20px;
+  background: rgba(34,109,11,0.07);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  color: rgba(245,240,232,0.7);
+  font-style: italic;
+}
+.prose :global(code) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem;
+  background: rgba(34,109,11,0.12);
+  border: 1px solid rgba(34,109,11,0.25);
+  padding: 2px 6px;
+  color: #226d0b;
+}
+.prose :global(pre) {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 24px;
+  overflow-x: auto;
+  margin: 0 0 24px;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.prose :global(pre code) {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(245,240,232,0.8);
+  font-size: 0.85rem;
+}
+.prose :global(hr) {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  margin: 40px 0;
+}
+.prose :global(img) {
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+  margin: 20px 0;
+}
+.prose :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 24px;
+  font-size: 0.88rem;
+}
+.prose :global(th) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #226d0b;
+  border-bottom: 1px solid rgba(34,109,11,0.3);
+  padding: 10px 12px;
+  text-align: left;
+}
+.prose :global(td) {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(245,240,232,0.65);
+}
+
+.post-sidebar {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sidebar-card { padding: 20px; }
+.sidebar-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.3);
+  margin-bottom: 10px;
+}
+.sidebar-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.author-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+.author-name {
+  font-size: 0.88rem;
+  color: #f5f0e8;
+  font-weight: 600;
+}
+.author-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.sidebar-date {
+  font-size: 0.88rem;
+  color: rgba(245,240,232,0.65);
+}
+.sidebar-back {
+  display: block;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.post-footer {
+  padding: 40px 24px 80px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+@media (max-width: 900px) {
+  .post-layout {
+    grid-template-columns: 1fr;
+  }
+  .post-sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .sidebar-card { flex: 1; min-width: 140px; }
+  .sidebar-back { width: 100%; }
+}
+@media (max-width: 600px) {
+  .post-title { font-size: clamp(2rem, 9vw, 3rem); }
+  .featured-inner { padding: 24px; }
+}
+</style>

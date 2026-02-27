@@ -1,5 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
+import { SOCIALS } from '../config/socials';
+
+const baseUrl = import.meta.env.BASE_URL;
 
 const stats = [
   { value: 'x+', label: 'Teen Scientists' },
@@ -41,19 +44,9 @@ const features = [
 
 const testimonials = [
   {
-    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    name:  'Random Guy 1',
-    role:  'NA',
-  },
-  {
-    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    name:  'Random Guy 2',
-    role:  'NA',
-  },
-  {
-    quote: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    name:  'Random Guy 3',
-    role:  'NA',
+    quote: 'CoQatalyst completely changed how I approach research. I went from just recreating experiments to presenting my original findings to leading a whole exhibition. The community here actually listens and gives real feedback, not just empty encouragement.',
+    name:  'Rishit Agarwal',
+    role:  '10th Grade',
   },
 ];
 
@@ -66,7 +59,7 @@ const marqueeItems = Array(6).fill([
 ]).flat();
 ---
 
-<Base title="CoQatalyst" currentPath="/">
+<Base title="CoQatalyst" description="CoQatalyst, a teen-led science community. Host exhibitions, competitions, and research discussions. Connect with young scientists passionate about AI, machine learning, and STEM." currentPath="/">
   <div style="padding-top:67px;">
 
     <section class="hero grid-bg">
@@ -96,19 +89,19 @@ const marqueeItems = Array(6).fill([
             </p>
 
             <div class="hero-ctas anim-fade-up d3">
-              <a href={`${import.meta.env.BASE_URL}about`} class="btn-primary">Learn More &rarr;</a>
-              <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-outline">Join the Community</a>
+              <a href={`${baseUrl}about`} class="btn-primary">Learn More &rarr;</a>
+              <a href={SOCIALS.DISCORD.href} target="_blank" rel="noreferrer" class="btn-outline">Join the Community</a>
             </div>
           </div>
 
           <div class="hero-logo-wrap anim-float">
             <div class="hero-ring-outer anim-spin-rev"></div>
             <div class="hero-ring-inner anim-spin"></div>
-            <img src={`${import.meta.env.BASE_URL}assets/logo-icon.png`} alt="CoQatalyst" class="hero-logo-img" width="220" height="220" />
+            <img src={`${baseUrl}assets/logo-icon.png`} alt="CoQatalyst" class="hero-logo-img" width="220" height="220" />
           </div>
 
         </div>
-
+<!-- Going to uncomment later when we acutally have some stats
         <div class="stats-bar anim-fade-up d4">
           {stats.map(stat => (
             <div class="stat-cell">
@@ -116,7 +109,7 @@ const marqueeItems = Array(6).fill([
               <div class="stat-label font-mono">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </div> -->
       </div>
     </section>
 
@@ -167,8 +160,7 @@ const marqueeItems = Array(6).fill([
               <div class="testi-quote-mark font-display">&rdquo;</div>
               <p class="testi-body">&ldquo;{t.quote}&rdquo;</p>
               <div class="testi-author">
-                <div class="testi-avatar font-display">{t.name[0]}</div>
-                <div>
+                  <div>
                   <div class="testi-name font-mono">{t.name}</div>
                   <div class="testi-role font-mono">{t.role}</div>
                 </div>
@@ -194,10 +186,10 @@ const marqueeItems = Array(6).fill([
               passionate, and ready to learn with others who love exploration.
             </p>
             <div class="cta-btns">
-              <a href="https://discord.gg/waitforsometimeig" target="_blank" rel="noreferrer" class="btn-primary">
+              <a href={SOCIALS.DISCORD.href} target="_blank" rel="noreferrer" class="btn-primary">
                 Join Discord Now &rarr;
               </a>
-              <a href={`${import.meta.env.BASE_URL}contact`} class="btn-outline">Get in Touch</a>
+              <a href={`${baseUrl}contact`} class="btn-outline">Get in Touch</a>
             </div>
           </div>
         </div>
@@ -459,23 +451,7 @@ const marqueeItems = Array(6).fill([
 .testi-author {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-.testi-avatar {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #226d0b, #dfa651);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  color: white;
-  flex-shrink: 0;
-  transition: all 0.3s ease;
-}
-.testi-card:hover .testi-avatar {
-  transform: scale(1.1) rotate(360deg);
-  box-shadow: 0 0 15px rgba(34,109,11,0.6);
+  gap: 0;
 }
 .testi-name {
   font-size: 0.8rem;
