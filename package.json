@@ -1,6 +1,6 @@
 {
-  "name": "coqatalyst-astro",
-  "version": "0.1.0",
+  "name": "coqatalyst-website",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "astro dev",
