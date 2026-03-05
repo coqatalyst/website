@@ -1,14 +1,25 @@
 import { v } from "convex/values";
-import { mutation, query, action, internalMutation, internalQuery } from "./_generated/server";
+import {
+  mutation,
+  query,
+  action,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { Resend } from "resend";
 import bcrypt from "bcryptjs";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const register = action({
   args: { name: v.string(), email: v.string(), password: v.string() },
-  handler: async (ctx, args): Promise<{ success: boolean; verificationToken?: string; error?: string }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    verificationToken?: string;
+    error?: string;
+  }> => {
     const passwordHash = await bcrypt.hash(args.password, 12);
     const result = await ctx.runMutation(internal.auth.createUserInternal, {
       name: args.name.trim(),
@@ -17,6 +28,7 @@ export const register = action({
     });
     if (!result.success) return result;
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: "onboarding@resend.dev",
         to: [args.email],
@@ -50,18 +62,39 @@ export const register = action({
 
 export const login = action({
   args: { email: v.string(), password: v.string() },
-  handler: async (ctx, args): Promise<{ success: boolean; sessionToken?: string; user?: { id: string; name: string; email: string; isAdmin: boolean }; error?: string }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    sessionToken?: string;
+    user?: { id: string; name: string; email: string; isAdmin: boolean };
+    error?: string;
+  }> => {
     const email = args.email.toLowerCase().trim();
     const user = await ctx.runQuery(internal.auth.getUserInternal, { email });
     if (!user) return { success: false, error: "Invalid credentials." };
-    const isPasswordValid = await bcrypt.compare(args.password, user.passwordHash);
-    if (!isPasswordValid) return { success: false, error: "Invalid credentials." };
-    if (!user.emailVerified) return { success: false, error: "Please verify your email first." };
-    const sessionToken = await ctx.runMutation(internal.auth.createSessionInternal, { userId: user._id });
+    const isPasswordValid = await bcrypt.compare(
+      args.password,
+      user.passwordHash,
+    );
+    if (!isPasswordValid)
+      return { success: false, error: "Invalid credentials." };
+    if (!user.emailVerified)
+      return { success: false, error: "Please verify your email first." };
+    const sessionToken = await ctx.runMutation(
+      internal.auth.createSessionInternal,
+      { userId: user._id },
+    );
     return {
       success: true,
       sessionToken,
-      user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
     };
   },
 });
@@ -69,7 +102,10 @@ export const login = action({
 export const createUserInternal = internalMutation({
   args: { name: v.string(), email: v.string(), passwordHash: v.string() },
   handler: async (ctx, args) => {
-    const existing = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
     if (existing) return { success: false, error: "Email already registered." };
     const verificationToken = Math.random().toString(36).substring(2, 15);
     const userId = await ctx.db.insert("users", {
@@ -89,8 +125,15 @@ export const createUserInternal = internalMutation({
 export const createSessionInternal = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-    await ctx.db.insert("sessions", { userId: args.userId, token, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, createdAt: Date.now() });
+    const token =
+      Math.random().toString(36).substring(2) +
+      Math.random().toString(36).substring(2);
+    await ctx.db.insert("sessions", {
+      userId: args.userId,
+      token,
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      createdAt: Date.now(),
+    });
     return token;
   },
 });
@@ -98,9 +141,21 @@ export const createSessionInternal = internalMutation({
 export const verifyEmail = mutation({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db.query("users").filter((q) => q.eq(q.field("verificationToken"), args.token)).first();
-    if (!user || (user.verificationTokenExpiry && user.verificationTokenExpiry < Date.now())) return { success: false, error: "Invalid or expired token." };
-    await ctx.db.patch(user._id, { emailVerified: true, verificationToken: undefined, verificationTokenExpiry: undefined });
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("verificationToken"), args.token))
+      .first();
+    if (
+      !user ||
+      (user.verificationTokenExpiry &&
+        user.verificationTokenExpiry < Date.now())
+    )
+      return { success: false, error: "Invalid or expired token." };
+    await ctx.db.patch(user._id, {
+      emailVerified: true,
+      verificationToken: undefined,
+      verificationTokenExpiry: undefined,
+    });
     return { success: true };
   },
 });
@@ -108,7 +163,10 @@ export const verifyEmail = mutation({
 export const logout = mutation({
   args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
-    const session = await ctx.db.query("sessions").withIndex("by_token", (q) => q.eq("token", args.sessionToken)).first();
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
     if (session) await ctx.db.delete(session._id);
     return { success: true };
   },
@@ -118,28 +176,50 @@ export const getCurrentUser = query({
   args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
     if (!args.sessionToken) return null;
-    const session = await ctx.db.query("sessions").withIndex("by_token", (q) => q.eq("token", args.sessionToken)).first();
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
     if (!session || session.expiresAt < Date.now()) return null;
     const user = await ctx.db.get(session.userId);
     if (!user) return null;
-    return { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin };
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+    };
   },
 });
 
 export const getUserInternal = internalQuery({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
+    return await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
   },
 });
 
 export const resendVerificationToken = action({
   args: { email: v.string() },
-  handler: async (ctx, args): Promise<{ success: boolean; verificationToken?: string; error?: string }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    verificationToken?: string;
+    error?: string;
+  }> => {
     const email = args.email.toLowerCase().trim();
-    const result = await ctx.runMutation(internal.auth.regenerateTokenInternal, { email });
+    const result = await ctx.runMutation(
+      internal.auth.regenerateTokenInternal,
+      { email },
+    );
     if (!result.success) return result;
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: "onboarding@resend.dev",
         to: [email],
@@ -169,11 +249,19 @@ export const resendVerificationToken = action({
 export const regenerateTokenInternal = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
-    if (!user) return { success: false, error: "No account found with that email." };
-    if (user.emailVerified) return { success: false, error: "Email is already verified." };
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+    if (!user)
+      return { success: false, error: "No account found with that email." };
+    if (user.emailVerified)
+      return { success: false, error: "Email is already verified." };
     const verificationToken = Math.random().toString(36).substring(2, 15);
-    await ctx.db.patch(user._id, { verificationToken, verificationTokenExpiry: Date.now() + 24 * 60 * 60 * 1000 });
+    await ctx.db.patch(user._id, {
+      verificationToken,
+      verificationTokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
+    });
     return { success: true, verificationToken };
   },
 });

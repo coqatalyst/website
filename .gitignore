@@ -1,5 +1,5 @@
 # Astro build files
-.astro 
+.astro
 node_modules
 dist
 
@@ -7,5 +7,6 @@ dist
 convex/_generated
 
 # Environment Variables
-.env.local 
 .env
+.env.local
+.env.production
