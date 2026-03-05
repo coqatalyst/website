@@ -17,6 +17,14 @@ jobs:
       - name: Checkout the repository using git
         uses: actions/checkout@v5
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Deploy Convex to production
         run: npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name PUBLIC_CONVEX_URL
         env:
