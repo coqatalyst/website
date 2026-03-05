@@ -1,0 +1,11 @@
+---
+// src/pages/dashboard.astro
+import Base from '../layouts/Base.astro';
+import UserDashboard from '../components/user/UserDashboard';
+
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<Base title="Dashboard — CoQatalyst" currentPath={`${baseUrl}dashboard`}>
+  <UserDashboard client:load />
+</Base>

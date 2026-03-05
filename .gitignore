@@ -3,5 +3,9 @@
 node_modules
 dist
 
-# Others
-src/env.d.ts
+# Convex Files
+convex/_generated
+
+# Environment Variables
+.env.local 
+.env

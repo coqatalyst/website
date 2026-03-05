@@ -1,29 +1,44 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { ConvexHttpClient } from 'convex/browser';
+import { marked } from 'marked';
 
 const baseUrl = import.meta.env.BASE_URL;
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-  return posts.map(post => ({
-    params: { slug: post.slug },
-    props:  { post },
-  }));
+  const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+
+  if (!convexUrl) {
+    console.warn('PUBLIC_CONVEX_URL not set, skipping blog pre-rendering');
+    return [];
+  }
+
+  const client = new ConvexHttpClient(convexUrl);
+
+  try {
+    const blogs = await client.query('blogs:listBlogs');
+    return blogs.map((blog: any) => ({
+      params: { slug: blog.slug },
+      props: { blog },
+    }));
+  } catch (error) {
+    console.error('Failed to fetch blogs:', error);
+    return [];
+  }
 }
 
 interface Props {
-  post: CollectionEntry<'blog'>;
+  blog: any;
 }
 
-const { post } = Astro.props as Props;
-const { Content } = await post.render();
+const { blog } = Astro.props as Props;
+const contentHtml = await marked(blog.content);
 ---
 
 <Base
-  title={`${post.data.title} — CoQatalyst`}
-  description={post.data.excerpt}
-  currentPath={`${baseUrl}blog/${post.slug}`}
+  title={`${blog.title} — CoQatalyst`}
+  description={blog.excerpt}
+  currentPath={`${baseUrl}blog/${blog.slug}`}
 >
   <div style="padding-top:67px;">
 
@@ -36,49 +51,47 @@ const { Content } = await post.render();
           <span class="bc-sep">/</span>
           <a href={`${baseUrl}blog`} class="bc-link">Blog</a>
           <span class="bc-sep">/</span>
-          <span class="bc-current">{post.data.title}</span>
+          <span class="bc-current">{blog.title}</span>
         </nav>
 
         <div class="post-meta-row">
           <span
             class="post-tag font-mono"
-            style={`color:${post.data.accent}; border-color:${post.data.accent}44;`}
+            style={`color:${blog.accent}; border-color:${blog.accent}44;`}
           >
-            {post.data.tag}
+            {blog.tag}
           </span>
           <span class="post-meta-txt font-mono">
-            {post.data.author} &middot; {post.data.date}
+            {blog.author} &middot; {blog.date}
           </span>
         </div>
 
-        <h1 class="font-display post-title">{post.data.title}</h1>
+        <h1 class="font-display post-title">{blog.title}</h1>
 
-        <p class="post-excerpt">{post.data.excerpt}</p>
+        <p class="post-excerpt">{blog.excerpt}</p>
 
-        <div class="post-accent-line" style={`background: linear-gradient(90deg, ${post.data.accent}, #dfa651);`}></div>
+        <div class="post-accent-line" style={`background: linear-gradient(90deg, ${blog.accent}, #dfa651);`}></div>
 
       </div>
     </header>
 
     <div class="container post-layout">
-      <article class="post-content prose">
-        <Content />
-      </article>
+      <article class="post-content prose" set:html={contentHtml} />
 
       <aside class="post-sidebar">
         <div class="sidebar-card sharp-card">
           <div class="sidebar-label font-mono">Author</div>
           <div class="sidebar-author">
             <div>
-              <div class="author-name">{post.data.author}</div>
-              <div class="author-tag font-mono" style={`color:${post.data.accent};`}>{post.data.tag}</div>
+              <div class="author-name">{blog.author}</div>
+              <div class="author-tag font-mono" style={`color:${blog.accent};`}>{blog.tag}</div>
             </div>
           </div>
         </div>
 
         <div class="sidebar-card sharp-card">
           <div class="sidebar-label font-mono">Published</div>
-          <div class="sidebar-date">{post.data.date}</div>
+          <div class="sidebar-date">{blog.date}</div>
         </div>
 
         <a href={`${baseUrl}blog`} class="btn-outline sidebar-back">
@@ -124,20 +137,10 @@ const { Content } = await post.render();
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
-.bc-link {
-  color: rgba(245,240,232,0.4);
-  text-decoration: none;
-  transition: color 0.2s;
-}
+.bc-link { color: rgba(245,240,232,0.4); text-decoration: none; transition: color 0.2s; }
 .bc-link:hover { color: #dfa651; }
 .bc-sep { color: rgba(245,240,232,0.2); }
-.bc-current {
-  color: rgba(245,240,232,0.7);
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.bc-current { color: rgba(245,240,232,0.7); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .post-meta-row {
   display: flex;
@@ -154,11 +157,7 @@ const { Content } = await post.render();
   border: 1px solid;
   clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
 }
-.post-meta-txt {
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  color: rgba(245,240,232,0.35);
-}
+.post-meta-txt { font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(245,240,232,0.35); }
 
 .post-title {
   font-size: clamp(2.5rem, 6vw, 5rem);
@@ -168,7 +167,6 @@ const { Content } = await post.render();
   margin-bottom: 20px;
   max-width: 900px;
 }
-
 .post-excerpt {
   font-size: 1.1rem;
   color: rgba(245,240,232,0.55);
@@ -176,12 +174,7 @@ const { Content } = await post.render();
   max-width: 640px;
   margin-bottom: 28px;
 }
-
-.post-accent-line {
-  height: 3px;
-  width: 80px;
-  border-radius: 2px;
-}
+.post-accent-line { height: 3px; width: 80px; border-radius: 2px; }
 
 .post-layout {
   display: grid;
@@ -221,34 +214,18 @@ const { Content } = await post.render();
   color: #226d0b;
   margin: 24px 0 8px;
 }
-.prose :global(p) {
-  margin: 0 0 20px;
-}
+.prose :global(p) { margin: 0 0 20px; }
 .prose :global(a) {
   color: #dfa651;
   text-decoration: underline;
   text-decoration-color: rgba(223,166,81,0.4);
   transition: text-decoration-color 0.2s;
 }
-.prose :global(a:hover) {
-  text-decoration-color: #dfa651;
-}
-.prose :global(strong) {
-  color: #f5f0e8;
-  font-weight: 700;
-}
-.prose :global(em) {
-  color: rgba(245,240,232,0.65);
-  font-style: italic;
-}
-.prose :global(ul),
-.prose :global(ol) {
-  margin: 0 0 20px 20px;
-}
-.prose :global(li) {
-  margin-bottom: 8px;
-  color: rgba(245,240,232,0.7);
-}
+.prose :global(a:hover) { text-decoration-color: #dfa651; }
+.prose :global(strong) { color: #f5f0e8; font-weight: 700; }
+.prose :global(em) { color: rgba(245,240,232,0.65); font-style: italic; }
+.prose :global(ul), .prose :global(ol) { margin: 0 0 20px 20px; }
+.prose :global(li) { margin-bottom: 8px; color: rgba(245,240,232,0.7); }
 .prose :global(li::marker) { color: #226d0b; }
 .prose :global(blockquote) {
   border-left: 3px solid #226d0b;
@@ -331,41 +308,11 @@ const { Content } = await post.render();
   color: rgba(245,240,232,0.3);
   margin-bottom: 10px;
 }
-.sidebar-author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.author-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: white;
-  flex-shrink: 0;
-}
-.author-name {
-  font-size: 0.88rem;
-  color: #f5f0e8;
-  font-weight: 600;
-}
-.author-tag {
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-.sidebar-date {
-  font-size: 0.88rem;
-  color: rgba(245,240,232,0.65);
-}
-.sidebar-back {
-  display: block;
-  text-align: center;
-  margin-top: 4px;
-}
+.sidebar-author { display: flex; align-items: center; gap: 10px; }
+.author-name { font-size: 0.88rem; color: #f5f0e8; font-weight: 600; }
+.author-tag { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px; }
+.sidebar-date { font-size: 0.88rem; color: rgba(245,240,232,0.65); }
+.sidebar-back { display: block; text-align: center; margin-top: 4px; }
 
 .post-footer {
   padding: 40px 24px 80px;
@@ -376,19 +323,12 @@ const { Content } = await post.render();
 }
 
 @media (max-width: 900px) {
-  .post-layout {
-    grid-template-columns: 1fr;
-  }
-  .post-sidebar {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
+  .post-layout { grid-template-columns: 1fr; }
+  .post-sidebar { position: static; flex-direction: row; flex-wrap: wrap; }
   .sidebar-card { flex: 1; min-width: 140px; }
   .sidebar-back { width: 100%; }
 }
 @media (max-width: 600px) {
   .post-title { font-size: clamp(2rem, 9vw, 3rem); }
-  .featured-inner { padding: 24px; }
 }
 </style>

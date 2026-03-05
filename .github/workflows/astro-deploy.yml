@@ -1,8 +1,8 @@
-name: Deploy Astro site to Pages
+name: Deploy Astro site to Pages with Convex
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,10 +14,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout the repository using git
         uses: actions/checkout@v5
-      - name: Install, build, and upload your site
+
+      - name: Deploy Convex to production
+        run: npx convex deploy --cmd 'npm run build'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      - name: Install, build, and upload the site
         uses: withastro/action@v5
+        with:
+          node-version: 20
 
   deploy:
     needs: build

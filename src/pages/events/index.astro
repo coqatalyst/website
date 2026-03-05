@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SOCIALS } from '../../config/socials';
+import EventsList from '../../components/events/EventsList';
+
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<Base title="Events — CoQatalyst"
+  description="Discover upcoming CoQatalyst events."
+  currentPath={`${baseUrl}events`}>
+  <div style="padding-top:67px;">
+
+    <section class="ev-hero">
+      <div class="container">
+        <div class="section-tag" style="margin-bottom:16px;">Events</div>
+        <h1 class="font-display ev-h1">
+          <span class="ev-h1-white">WHERE SCIENCE</span>
+          <span class="gradient-text">GOES LIVE</span>
+        </h1>
+        <p class="ev-sub">
+          Exhibitions, workshops, and community sessions — all run by teens,
+          for teens. Register, present, or just show up.
+        </p>
+      </div>
+    </section>
+
+    <div class="container ev-body">
+      <EventsList client:load />
+    </div>
+  </div>
+</Base>
+
+<style>
+.ev-hero {
+  padding: 80px 0 56px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+.ev-h1 {
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.95;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.ev-h1-white { color: #f5f0e8; }
+.ev-sub {
+  color: rgba(245,240,232,0.5);
+  font-size: 1rem;
+  max-width: 480px;
+  line-height: 1.7;
+}
+.ev-body { padding: 32px 24px 100px; }
+
+.section-tag {
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+}
+</style>

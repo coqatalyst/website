@@ -1,0 +1,179 @@
+import { v } from "convex/values";
+import { mutation, query, action, internalMutation, internalQuery } from "./_generated/server";
+import { api, internal } from "./_generated/api";
+import { Resend } from "resend";
+import bcrypt from "bcryptjs";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const register = action({
+  args: { name: v.string(), email: v.string(), password: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; verificationToken?: string; error?: string }> => {
+    const passwordHash = await bcrypt.hash(args.password, 12);
+    const result = await ctx.runMutation(internal.auth.createUserInternal, {
+      name: args.name.trim(),
+      email: args.email.toLowerCase().trim(),
+      passwordHash,
+    });
+    if (!result.success) return result;
+    try {
+      await resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: [args.email],
+        subject: "Verify your Coqatalyst account",
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff; color: #111111;">
+            <div style="margin-bottom: 30px; text-align: center;">
+              <h1 style="color: #000; margin: 0; font-size: 24px; letter-spacing: -0.5px; text-transform: uppercase;">Coqatalyst</h1>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 12px; border: 1px solid #eeeeee;">
+              <h2 style="color: #111; font-size: 20px; margin-top: 0;">Verify your account</h2>
+              <p style="color: #444; font-size: 16px; line-height: 1.6;">Hi ${args.name},<br/>Welcome to <strong>Coqatalyst</strong>. Please use the verification token below to activate your account on the registration page.</p>
+              <div style="margin: 32px 0; padding: 20px; background-color: #000; border-radius: 8px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.1em; font-family: monospace;">Your Token</p>
+                <div style="color: #ffffff; font-family: 'Space Mono', monospace; font-size: 28px; font-weight: bold; letter-spacing: 0.1em;">${result.verificationToken}</div>
+              </div>
+              <p style="color: #666; font-size: 14px; line-height: 1.6;">Copy this code and paste it into the verification field. This token will expire in 24 hours.</p>
+            </div>
+            <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eeeeee; padding-top: 20px;">
+              <p style="color: #999; font-size: 12px; margin-bottom: 4px;">&copy; ${new Date().getFullYear()} Coqatalyst. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send email:", error);
+    }
+    return { success: true };
+  },
+});
+
+export const login = action({
+  args: { email: v.string(), password: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; sessionToken?: string; user?: { id: string; name: string; email: string; isAdmin: boolean }; error?: string }> => {
+    const email = args.email.toLowerCase().trim();
+    const user = await ctx.runQuery(internal.auth.getUserInternal, { email });
+    if (!user) return { success: false, error: "Invalid credentials." };
+    const isPasswordValid = await bcrypt.compare(args.password, user.passwordHash);
+    if (!isPasswordValid) return { success: false, error: "Invalid credentials." };
+    if (!user.emailVerified) return { success: false, error: "Please verify your email first." };
+    const sessionToken = await ctx.runMutation(internal.auth.createSessionInternal, { userId: user._id });
+    return {
+      success: true,
+      sessionToken,
+      user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin },
+    };
+  },
+});
+
+export const createUserInternal = internalMutation({
+  args: { name: v.string(), email: v.string(), passwordHash: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
+    if (existing) return { success: false, error: "Email already registered." };
+    const verificationToken = Math.random().toString(36).substring(2, 15);
+    const userId = await ctx.db.insert("users", {
+      name: args.name,
+      email: args.email,
+      passwordHash: args.passwordHash,
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
+      isAdmin: false,
+      createdAt: Date.now(),
+    });
+    return { success: true, userId, verificationToken };
+  },
+});
+
+export const createSessionInternal = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    await ctx.db.insert("sessions", { userId: args.userId, token, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, createdAt: Date.now() });
+    return token;
+  },
+});
+
+export const verifyEmail = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.query("users").filter((q) => q.eq(q.field("verificationToken"), args.token)).first();
+    if (!user || (user.verificationTokenExpiry && user.verificationTokenExpiry < Date.now())) return { success: false, error: "Invalid or expired token." };
+    await ctx.db.patch(user._id, { emailVerified: true, verificationToken: undefined, verificationTokenExpiry: undefined });
+    return { success: true };
+  },
+});
+
+export const logout = mutation({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.query("sessions").withIndex("by_token", (q) => q.eq("token", args.sessionToken)).first();
+    if (session) await ctx.db.delete(session._id);
+    return { success: true };
+  },
+});
+
+export const getCurrentUser = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.sessionToken) return null;
+    const session = await ctx.db.query("sessions").withIndex("by_token", (q) => q.eq("token", args.sessionToken)).first();
+    if (!session || session.expiresAt < Date.now()) return null;
+    const user = await ctx.db.get(session.userId);
+    if (!user) return null;
+    return { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin };
+  },
+});
+
+export const getUserInternal = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
+  },
+});
+
+export const resendVerificationToken = action({
+  args: { email: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; verificationToken?: string; error?: string }> => {
+    const email = args.email.toLowerCase().trim();
+    const result = await ctx.runMutation(internal.auth.regenerateTokenInternal, { email });
+    if (!result.success) return result;
+    try {
+      await resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: [email],
+        subject: "Your new Coqatalyst verification token",
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff; color: #111111;">
+            <h1 style="color: #000; margin: 0 0 30px; font-size: 24px; text-transform: uppercase;">Coqatalyst</h1>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 12px; border: 1px solid #eeeeee;">
+              <h2 style="color: #111; font-size: 20px; margin-top: 0;">New Verification Token</h2>
+              <p style="color: #444; font-size: 16px; line-height: 1.6;">Here is your new verification token. It expires in 24 hours.</p>
+              <div style="margin: 32px 0; padding: 20px; background-color: #000; border-radius: 8px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.1em; font-family: monospace;">Your Token</p>
+                <div style="color: #ffffff; font-family: monospace; font-size: 28px; font-weight: bold; letter-spacing: 0.1em;">${result.verificationToken}</div>
+              </div>
+            </div>
+            <p style="color: #999; font-size: 12px; margin-top: 30px; text-align: center;">&copy; ${new Date().getFullYear()} Coqatalyst. All rights reserved.</p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send email:", error);
+    }
+    return { success: true };
+  },
+});
+
+export const regenerateTokenInternal = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", args.email)).first();
+    if (!user) return { success: false, error: "No account found with that email." };
+    if (user.emailVerified) return { success: false, error: "Email is already verified." };
+    const verificationToken = Math.random().toString(36).substring(2, 15);
+    await ctx.db.patch(user._id, { verificationToken, verificationTokenExpiry: Date.now() + 24 * 60 * 60 * 1000 });
+    return { success: true, verificationToken };
+  },
+});

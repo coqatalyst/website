@@ -1,0 +1,438 @@
+---
+import Base from '../../layouts/Base.astro';
+import { ConvexHttpClient } from 'convex/browser';
+import { marked } from 'marked';
+
+const baseUrl = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+  
+  if (!convexUrl) {
+    console.warn('PUBLIC_CONVEX_URL not set, skipping event pre-rendering');
+    return [];
+  }
+  
+  const client = new ConvexHttpClient(convexUrl);
+  
+  try {
+    const events = await client.query('events:listEvents');
+    return events.map((event: any) => ({
+      params: { slug: event.slug },
+      props: { event },
+    }));
+  } catch (error) {
+    console.error('Failed to fetch events:', error);
+    return [];
+  } 
+}
+
+interface Props {
+  event: any;
+}
+
+const { event } = Astro.props as Props;
+const descriptionHtml = await marked(event.description);
+---
+
+<Base
+  title={`${event.title} — CoQatalyst Events`}
+  description={event.excerpt}
+  currentPath={`${baseUrl}events/${event.slug}`}
+>
+  <div style="padding-top:67px;">
+
+    <header class="event-header">
+      <div class="event-header-bg"></div>
+      <div class="container event-header-inner">
+
+        <nav class="breadcrumb font-mono">
+          <a href={baseUrl} class="bc-link">Home</a>
+          <span class="bc-sep">/</span>
+          <a href={`${baseUrl}events`} class="bc-link">Events</a>
+          <span class="bc-sep">/</span>
+          <span class="bc-current">{event.title}</span>
+        </nav>
+
+        <div class="event-meta-row">
+          <span
+            class="event-tag font-mono"
+            style={`color:${event.accent}; border-color:${event.accent}44;`}
+          >
+            {event.tag}
+          </span>
+          <span class="event-badge font-mono">
+            {event.isFree ? 'Free' : `₹${event.price}`}
+          </span>
+        </div>
+
+        <h1 class="font-display event-title">{event.title}</h1>
+
+        <p class="event-excerpt">{event.excerpt}</p>
+
+        <div class="event-accent-line" style={`background: linear-gradient(90deg, ${event.accent}, #dfa651);`}></div>
+
+      </div>
+    </header>
+
+    <div class="container event-layout">
+      <article class="event-content">
+        <div class="event-details">
+          <div class="detail-group">
+            <h3 class="detail-label font-mono">Date</h3>
+            <p class="detail-value">{event.date}</p>
+          </div>
+          <div class="detail-group">
+            <h3 class="detail-label font-mono">Location</h3>
+            <p class="detail-value">{event.location}</p>
+          </div>
+          <div class="detail-group">
+            <h3 class="detail-label font-mono">Capacity</h3>
+            <p class="detail-value">{event.capacity} seats</p>
+          </div>
+          <div class="detail-group">
+            <h3 class="detail-label font-mono">Price</h3>
+            <p class="detail-value">
+              {event.isFree ? 'Free' : `₹${event.price}`}
+            </p>
+          </div>
+        </div>
+
+        {event.coverImage && (
+          <img
+            src={event.coverImage}
+            alt={event.title}
+            class="event-cover-image"
+          />
+        )}
+
+        <div class="event-description prose" set:html={descriptionHtml}>
+        </div>
+
+        {event.imageGallery && event.imageGallery.length > 0 && (
+          <div class="event-gallery">
+            <h2 class="font-display gallery-title">Gallery</h2>
+            <div class="gallery-grid">
+              {event.imageGallery.map((image: string) => (
+                <img
+                  src={image}
+                  alt={`${event.title} gallery`}
+                  class="gallery-image"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </article>
+
+      <aside class="event-sidebar">
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Quick Info</div>
+          <div class="sidebar-info">
+            <div class="info-row">
+              <span class="info-label">Date:</span>
+              <span class="info-value">{event.date}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Location:</span>
+              <span class="info-value">{event.location}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Seats:</span>
+              <span class="info-value">{event.capacity}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Price:</span>
+              <span class="info-value">
+                {event.isFree ? 'Free' : `₹${event.price}`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <a href={`${baseUrl}events`} class="btn-outline sidebar-back">
+          &larr; All Events
+        </a>
+      </aside>
+    </div>
+
+    <div class="container event-footer">
+      <a href={`${baseUrl}events`} class="btn-primary">
+        &larr; Back to Events
+      </a>
+      <a href={`${baseUrl}contact`} class="btn-outline">
+        Questions? Get in Touch
+      </a>
+    </div>
+
+  </div>
+</Base>
+
+<style>
+  .event-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+    padding: 60px 0 40px;
+    margin-bottom: 60px;
+  }
+
+  .event-header-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background: radial-gradient(circle at 20% 50%, #226d0b, transparent 50%);
+    pointer-events: none;
+  }
+
+  .event-header-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .breadcrumb {
+    display: flex;
+    gap: 8px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 28px;
+    color: rgba(245, 240, 232, 0.5);
+  }
+
+  .bc-link {
+    color: rgba(245, 240, 232, 0.65);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .bc-link:hover {
+    color: #226d0b;
+  }
+
+  .bc-sep {
+    color: rgba(245, 240, 232, 0.3);
+  }
+
+  .bc-current {
+    color: #226d0b;
+  }
+
+  .event-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .event-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: 1px solid;
+    padding: 4px 10px;
+    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
+  }
+
+  .event-badge {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(34, 109, 11, 0.15);
+    color: #226d0b;
+    padding: 4px 10px;
+    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
+  }
+
+  .event-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.02em;
+    color: #f5f0e8;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .event-excerpt {
+    font-size: 1.1rem;
+    color: rgba(245, 240, 232, 0.7);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 90%;
+  }
+
+  .event-accent-line {
+    height: 3px;
+    width: 60px;
+    border-radius: 2px;
+  }
+
+  .event-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 48px;
+    margin-bottom: 60px;
+  }
+
+  .event-content {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .event-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 32px;
+    padding: 32px;
+    background: linear-gradient(135deg, rgba(34, 109, 11, 0.08), rgba(34, 109, 11, 0.03));
+    border: 1px solid rgba(34, 109, 11, 0.15);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  }
+
+  .detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .detail-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245, 240, 232, 0.4);
+  }
+
+  .detail-value {
+    font-size: 1rem;
+    color: #f5f0e8;
+    line-height: 1.4;
+  }
+
+  .event-cover-image {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    border: 1px solid rgba(34, 109, 11, 0.2);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  }
+
+  .event-description {
+    font-size: 1rem;
+    color: rgba(245, 240, 232, 0.8);
+    line-height: 1.8;
+  }
+
+  .event-description p {
+    margin-bottom: 16px;
+  }
+
+  .event-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .gallery-title {
+    font-size: 1.8rem;
+    color: #f5f0e8;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .gallery-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border: 1px solid rgba(34, 109, 11, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .gallery-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 24px rgba(34, 109, 11, 0.2);
+  }
+
+  .event-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+  }
+
+  .sidebar-card {
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(34, 109, 11, 0.08), rgba(34, 109, 11, 0.03));
+    border: 1px solid rgba(34, 109, 11, 0.15);
+  }
+
+  .sidebar-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245, 240, 232, 0.5);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .info-row {
+    display: flex;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+
+  .info-label {
+    color: rgba(245, 240, 232, 0.4);
+    font-weight: 500;
+    min-width: 60px;
+  }
+
+  .info-value {
+    color: #f5f0e8;
+  }
+
+  .sidebar-back {
+    margin-top: 8px;
+  }
+
+  .event-footer {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-bottom: 80px;
+  }
+
+  @media (max-width: 768px) {
+    .event-layout {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .event-sidebar {
+      position: static;
+    }
+
+    .event-excerpt {
+      max-width: 100%;
+    }
+
+    .event-details {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+</style>
