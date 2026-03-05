@@ -30,15 +30,18 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      - name: Deploy Convex to production
+      - name: Deploy Convex and build site
         run: npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name PUBLIC_CONVEX_URL
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      - name: Install, build, and upload the site
-        uses: withastro/action@v5
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: 20
+          path: dist/
 
   deploy:
     needs: build
