@@ -5,27 +5,33 @@ import { api } from '../../../convex/_generated/api';
 import QRScanner from '../../components/checkin/QRScanner';
 
 const baseUrl = import.meta.env.BASE_URL;
-const { slug } = Astro.params;
 
-let event = null;
-
-// Fetch event by slug
-if (slug) {
+export async function getStaticPaths() {
   const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
 
-  if (convexUrl) {
-    try {
-      const client = new ConvexHttpClient(convexUrl);
-      event = await client.query(api.events.getEventBySlug, { slug });
-    } catch (error) {
-      console.error('Failed to fetch event:', error);
-    }
+  if (!convexUrl) {
+    return [];
+  }
+
+  try {
+    const client = new ConvexHttpClient(convexUrl);
+    const events = await client.query(api.events.listEvents);
+
+    return events.map((event: any) => ({
+      params: { slug: event.slug },
+      props: { event },
+    }));
+  } catch (error) {
+    console.error('Failed to fetch events for static paths:', error);
+    return [];
   }
 }
 
-if (!event) {
-  return Astro.redirect('/404');
+interface Props {
+  event: any;
 }
+
+const { event } = Astro.props;
 ---
 
 <Base
@@ -59,12 +65,8 @@ if (!event) {
         <QRScanner
           client:load
           eventId={event._id}
-          onVerificationSuccess={() => {
-            // Success feedback handled in component
-          }}
-          onVerificationError={() => {
-            // Error feedback handled in component
-          }}
+          onVerificationSuccess={() => {}}
+          onVerificationError={() => {}}
         />
       </div>
 
