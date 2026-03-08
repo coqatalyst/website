@@ -31,7 +31,35 @@ interface Props {
   blog: any;
 }
 
-const { blog } = Astro.props as Props;
+const { slug } = Astro.params;
+let blog = (Astro.props as Props).blog;
+
+// If no blog provided (dynamic rendering), fetch it
+if (!blog && slug) {
+  const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+
+  if (!convexUrl) {
+    return Astro.redirect('/under-construction');
+  }
+
+  try {
+    const client = new ConvexHttpClient(convexUrl);
+    const blogs = await client.query('blogs:listBlogs');
+    blog = blogs.find((b: any) => b.slug === slug);
+
+    if (!blog) {
+      return Astro.redirect('/404');
+    }
+  } catch (error) {
+    console.error('Failed to fetch blog:', error);
+    return Astro.redirect('/under-construction');
+  }
+}
+
+if (!blog) {
+  return Astro.redirect('/404');
+}
+
 const contentHtml = await marked(blog.content);
 ---
 

@@ -7,14 +7,14 @@ const baseUrl = import.meta.env.BASE_URL;
 
 export async function getStaticPaths() {
   const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
-  
+
   if (!convexUrl) {
     console.warn('PUBLIC_CONVEX_URL not set, skipping event pre-rendering');
     return [];
   }
-  
+
   const client = new ConvexHttpClient(convexUrl);
-  
+
   try {
     const events = await client.query('events:listEvents');
     return events.map((event: any) => ({
@@ -24,14 +24,42 @@ export async function getStaticPaths() {
   } catch (error) {
     console.error('Failed to fetch events:', error);
     return [];
-  } 
+  }
 }
 
 interface Props {
   event: any;
 }
 
-const { event } = Astro.props as Props;
+const { slug } = Astro.params;
+let event = (Astro.props as Props).event;
+
+// If no event provided (dynamic rendering), fetch it
+if (!event && slug) {
+  const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+
+  if (!convexUrl) {
+    return Astro.redirect('/under-construction');
+  }
+
+  try {
+    const client = new ConvexHttpClient(convexUrl);
+    const events = await client.query('events:listEvents');
+    event = events.find((e: any) => e.slug === slug);
+
+    if (!event) {
+      return Astro.redirect('/404');
+    }
+  } catch (error) {
+    console.error('Failed to fetch event:', error);
+    return Astro.redirect('/under-construction');
+  }
+}
+
+if (!event) {
+  return Astro.redirect('/404');
+}
+
 const descriptionHtml = await marked(event.description);
 ---
 
