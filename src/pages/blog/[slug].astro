@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { ConvexHttpClient } from 'convex/browser';
 import { marked } from 'marked';
+import { api } from '../../../convex/_generated/api';
 
 const baseUrl = import.meta.env.BASE_URL;
 
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
   const client = new ConvexHttpClient(convexUrl);
 
   try {
-    const blogs = await client.query('blogs:listBlogs');
+    const blogs = await client.query(api.blogs.listBlogs);
     return blogs.map((blog: any) => ({
       params: { slug: blog.slug },
       props: { blog },
@@ -44,7 +45,7 @@ if (!blog && slug) {
 
   try {
     const client = new ConvexHttpClient(convexUrl);
-    const blogs = await client.query('blogs:listBlogs');
+    const blogs = await client.query(api.blogs.listBlogs);
     blog = blogs.find((b: any) => b.slug === slug);
 
     if (!blog) {

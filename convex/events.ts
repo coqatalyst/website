@@ -1,32 +1,54 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// ── list published events ──────────────────────────────────────────────────
+async function resolveEventImages(ctx: any, event: any): Promise<any> {
+  const result = { ...event };
+
+  if (event.coverImageStorageId) {
+    result.coverImage = await ctx.storage.getUrl(event.coverImageStorageId);
+  }
+
+  if (
+    event.imageGalleryStorageIds &&
+    Array.isArray(event.imageGalleryStorageIds) &&
+    event.imageGalleryStorageIds.length > 0
+  ) {
+    const galleryUrls = await Promise.all(
+      event.imageGalleryStorageIds.map((id: string) => ctx.storage.getUrl(id)),
+    );
+    result.imageGallery = [
+      ...(event.imageGallery || []),
+      ...galleryUrls.filter(Boolean),
+    ];
+  }
+
+  return result;
+}
 
 export const listEvents = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const events = await ctx.db
       .query("events")
       .filter((q) => q.eq(q.field("published"), true))
       .order("desc")
       .collect();
+
+    return Promise.all(events.map((e) => resolveEventImages(ctx, e)));
   },
 });
-
-// ── get event by slug ──────────────────────────────────────────────────────
 
 export const getEventBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const event = await ctx.db
       .query("events")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
+    if (!event) return null;
+    return resolveEventImages(ctx, event);
   },
 });
-
-// ── get all events (admin) ─────────────────────────────────────────────────
 
 export const listAllEvents = query({
   args: { sessionToken: v.string() },
@@ -39,11 +61,10 @@ export const listAllEvents = query({
     const user = await ctx.db.get(session.userId);
     if (!user?.isAdmin) return null;
 
-    return await ctx.db.query("events").order("desc").collect();
+    const events = await ctx.db.query("events").order("desc").collect();
+    return Promise.all(events.map((e) => resolveEventImages(ctx, e)));
   },
 });
-
-// ── create event (admin) ───────────────────────────────────────────────────
 
 export const createEvent = mutation({
   args: {
@@ -58,6 +79,8 @@ export const createEvent = mutation({
     price: v.number(),
     imageGallery: v.array(v.string()),
     coverImage: v.string(),
+    coverImageStorageId: v.optional(v.string()),
+    imageGalleryStorageIds: v.optional(v.array(v.string())),
     tag: v.string(),
     accent: v.string(),
     featured: v.boolean(),
@@ -97,6 +120,8 @@ export const updateEvent = mutation({
     price: v.number(),
     imageGallery: v.array(v.string()),
     coverImage: v.string(),
+    coverImageStorageId: v.optional(v.string()),
+    imageGalleryStorageIds: v.optional(v.array(v.string())),
     tag: v.string(),
     accent: v.string(),
     featured: v.boolean(),
@@ -113,7 +138,10 @@ export const updateEvent = mutation({
     if (!user?.isAdmin) return { success: false, error: "Forbidden" };
 
     const { sessionToken, id, ...eventData } = args;
-    await ctx.db.patch(id, { ...eventData, isFree: eventData.price === 0 });
+    await ctx.db.patch(id, {
+      ...eventData,
+      isFree: eventData.price === 0,
+    });
     return { success: true };
   },
 });
@@ -131,5 +159,46 @@ export const deleteEvent = mutation({
     if (!user?.isAdmin) return { success: false, error: "Forbidden" };
     await ctx.db.delete(args.id);
     return { success: true };
+  },
+});
+
+export const generateEventCoverImageUploadUrl = mutation({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
+    if (!session || session.expiresAt < Date.now())
+      return { success: false, error: "Unauthorized" };
+    const user = await ctx.db.get(session.userId);
+    if (!user?.isAdmin) return { success: false, error: "Forbidden" };
+
+    const url = await ctx.storage.generateUploadUrl();
+    return { success: true, url };
+  },
+});
+
+export const generateEventGalleryImageUploadUrl = mutation({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", args.sessionToken))
+      .first();
+    if (!session || session.expiresAt < Date.now())
+      return { success: false, error: "Unauthorized" };
+    const user = await ctx.db.get(session.userId);
+    if (!user?.isAdmin) return { success: false, error: "Forbidden" };
+
+    const url = await ctx.storage.generateUploadUrl();
+    return { success: true, url };
+  },
+});
+
+export const getEventImageUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
   },
 });

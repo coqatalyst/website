@@ -1,0 +1,258 @@
+---
+import Base from '../../layouts/Base.astro';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../convex/_generated/api';
+import QRScanner from '../../components/checkin/QRScanner';
+
+const baseUrl = import.meta.env.BASE_URL;
+const { slug } = Astro.params;
+
+let event = null;
+
+// Fetch event by slug
+if (slug) {
+  const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+
+  if (convexUrl) {
+    try {
+      const client = new ConvexHttpClient(convexUrl);
+      event = await client.query(api.events.getEventBySlug, { slug });
+    } catch (error) {
+      console.error('Failed to fetch event:', error);
+    }
+  }
+}
+
+if (!event) {
+  return Astro.redirect('/404');
+}
+---
+
+<Base
+  title={`Check-in — ${event.title} — CoQatalyst`}
+  description={`Check-in for ${event.title}`}
+  currentPath={`${baseUrl}checkin/${event.slug}`}
+>
+  <div style="padding-top:67px;">
+    <section class="checkin-hero">
+      <div class="container">
+        <nav class="breadcrumb font-mono">
+          <a href={baseUrl} class="bc-link">Home</a>
+          <span class="bc-sep">/</span>
+          <a href={`${baseUrl}events`} class="bc-link">Events</a>
+          <span class="bc-sep">/</span>
+          <a href={`${baseUrl}events/${event.slug}`} class="bc-link">{event.title}</a>
+          <span class="bc-sep">/</span>
+          <span class="bc-current">Check-in</span>
+        </nav>
+
+        <h1 class="font-display checkin-title">Event Check-in</h1>
+        <p class="checkin-subtitle">{event.title}</p>
+        <p class="checkin-desc">
+          Scan your QR code or enter your entry code to check in.
+        </p>
+      </div>
+    </section>
+
+    <div class="container checkin-body">
+      <div class="checkin-card">
+        <QRScanner
+          client:load
+          eventId={event._id}
+          onVerificationSuccess={() => {
+            // Success feedback handled in component
+          }}
+          onVerificationError={() => {
+            // Error feedback handled in component
+          }}
+        />
+      </div>
+
+      <div class="checkin-info">
+        <div class="info-card sharp-card">
+          <h3 class="info-title font-display">Event Details</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label font-mono">Date</span>
+              <span class="info-value">{event.date}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label font-mono">Location</span>
+              <span class="info-value">{event.location}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card sharp-card">
+          <h3 class="info-title font-display">Instructions</h3>
+          <ol class="instructions-list">
+            <li>Point your camera at the QR code on your ticket</li>
+            <li>Or manually enter your entry code</li>
+            <li>Confirmation will appear once verified</li>
+          </ol>
+        </div>
+
+        <a href={`${baseUrl}events/${event.slug}`} class="btn-outline">
+          &larr; Back to Event
+        </a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+.checkin-hero {
+  padding: 60px 0 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.bc-link {
+  color: rgba(245,240,232,0.4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.bc-link:hover {
+  color: #dfa651;
+}
+
+.bc-sep {
+  color: rgba(245,240,232,0.2);
+}
+
+.bc-current {
+  color: rgba(245,240,232,0.7);
+}
+
+.checkin-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #f5f0e8;
+  margin: 0 0 8px;
+  line-height: 1.1;
+}
+
+.checkin-subtitle {
+  font-size: 1.1rem;
+  color: #226d0b;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.checkin-desc {
+  color: rgba(245,240,232,0.5);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.checkin-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  padding: 48px 24px 80px;
+  align-items: start;
+}
+
+.checkin-card {
+  min-width: 0;
+}
+
+.checkin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(34, 109, 11, 0.08), rgba(34, 109, 11, 0.03));
+  border: 1px solid rgba(34, 109, 11, 0.15);
+}
+
+.info-title {
+  font-size: 1.1rem;
+  color: #f5f0e8;
+  margin: 0 0 16px;
+  letter-spacing: 0.02em;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: #f5f0e8;
+}
+
+.instructions-list {
+  margin: 0;
+  padding-left: 20px;
+  list-style: decimal;
+  color: rgba(245,240,232,0.7);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.instructions-list li {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 900px) {
+  .checkin-body {
+    grid-template-columns: 1fr;
+  }
+
+  .checkin-info {
+    order: 2;
+  }
+
+  .checkin-card {
+    order: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .checkin-title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .checkin-body {
+    padding: 32px 16px 60px;
+    gap: 24px;
+  }
+
+  .info-card {
+    padding: 16px;
+  }
+}
+</style>

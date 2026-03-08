@@ -3,10 +3,12 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { withConvexProvider } from "../../lib/convex";
 import type { Id } from "../../../convex/_generated/dataModel";
+import ImageUploader from "./ImageUploader";
+import QRScanner from "../checkin/QRScanner";
 
 const BASE = import.meta.env.BASE_URL ?? "/";
 
-type Tab = "events" | "blogs" | "registrations";
+type Tab = "events" | "blogs" | "registrations" | "checkin";
 
 const ACCENT_OPTIONS = [
   { label: "Green", value: "#226d0b" },
@@ -27,6 +29,8 @@ const DEFAULT_EVENT = {
   price: 0,
   imageGallery: [] as string[],
   coverImage: "",
+  coverImageStorageId: undefined as string | undefined,
+  imageGalleryStorageIds: undefined as string[] | undefined,
   tag: "Exhibition",
   accent: "#226d0b",
   featured: false,
@@ -44,6 +48,7 @@ const DEFAULT_BLOG = {
   featured: false,
   published: false,
   coverImage: "",
+  coverImageStorageId: undefined as string | undefined,
 };
 
 function AdminDashboard() {
@@ -60,6 +65,9 @@ function AdminDashboard() {
   const [blogForm, setBlogForm] = useState(DEFAULT_BLOG);
   const [editingBlogId, setEditingBlogId] = useState<Id<"blogs"> | null>(null);
   const [blogMsg, setBlogMsg] = useState("");
+
+  const [selectedEventForCheckin, setSelectedEventForCheckin] =
+    useState<Id<"events"> | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("cq_session");
@@ -134,6 +142,8 @@ function AdminDashboard() {
       price: ev.price,
       imageGallery: ev.imageGallery,
       coverImage: ev.coverImage,
+      coverImageStorageId: ev.coverImageStorageId,
+      imageGalleryStorageIds: ev.imageGalleryStorageIds,
       tag: ev.tag,
       accent: ev.accent,
       featured: ev.featured,
@@ -184,7 +194,8 @@ function AdminDashboard() {
       accent: b.accent,
       featured: b.featured,
       published: b.published,
-      coverImage: b.coverImage ?? "",
+      coverImage: b.coverImage,
+      coverImageStorageId: b.coverImageStorageId,
     });
     setTab("blogs");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -236,15 +247,17 @@ function AdminDashboard() {
       <div className="admin-tabs-bar">
         <div className="container">
           <div className="admin-tabs">
-            {(["events", "blogs", "registrations"] as Tab[]).map((t) => (
-              <button
-                key={t}
-                className={`admin-tab font-mono${tab === t ? " active" : ""}`}
-                onClick={() => setTab(t)}
-              >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
+            {(["events", "blogs", "registrations", "checkin"] as Tab[]).map(
+              (t) => (
+                <button
+                  key={t}
+                  className={`admin-tab font-mono${tab === t ? " active" : ""}`}
+                  onClick={() => setTab(t)}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ),
+            )}
           </div>
         </div>
       </div>
@@ -399,6 +412,19 @@ function AdminDashboard() {
                     </div>
                   </Field>
                 </div>
+                <Field label="Or Upload Cover Image">
+                  <ImageUploader
+                    sessionToken={sessionToken!}
+                    onImageUpload={(storageId, url) => {
+                      setEventForm((p) => ({
+                        ...p,
+                        coverImageStorageId: storageId,
+                      }));
+                    }}
+                    imageType="event_cover"
+                    label="Upload Cover Image"
+                  />
+                </Field>
                 <Field label="Image Gallery (one URL per line)">
                   <textarea
                     className="sharp-input font-mono"
@@ -413,6 +439,22 @@ function AdminDashboard() {
                       }))
                     }
                     style={{ resize: "vertical", fontSize: "0.78rem" }}
+                  />
+                </Field>
+                <Field label="Or Upload Gallery Images">
+                  <ImageUploader
+                    sessionToken={sessionToken!}
+                    onImageUpload={(storageId, url) => {
+                      setEventForm((p) => ({
+                        ...p,
+                        imageGalleryStorageIds: [
+                          ...p.imageGalleryStorageIds,
+                          storageId,
+                        ],
+                      }));
+                    }}
+                    imageType="event_gallery"
+                    label="Upload Gallery Images"
                   />
                 </Field>
                 <div className="form-toggles">
@@ -616,6 +658,19 @@ function AdminDashboard() {
                           coverImage: e.target.value,
                         }))
                       }
+                    />
+                  </Field>
+                  <Field label="Or Upload Cover Image">
+                    <ImageUploader
+                      sessionToken={sessionToken!}
+                      onImageUpload={(storageId, url) => {
+                        setBlogForm((p) => ({
+                          ...p,
+                          coverImageStorageId: storageId,
+                        }));
+                      }}
+                      imageType="blog_cover"
+                      label="Upload Cover Image"
                     />
                   </Field>
                   <Field label="Accent Color">
@@ -832,6 +887,69 @@ function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {tab === "checkin" && (
+          <div className="tab-content">
+            <h2 className="font-display section-title">EVENT CHECK-IN</h2>
+            {!allEvents?.length && (
+              <p className="empty-list font-mono">No events available.</p>
+            )}
+            {allEvents?.length! > 0 && !selectedEventForCheckin && (
+              <div className="checkin-events-list">
+                <p className="checkin-label font-mono">
+                  Select an event to start check-in:
+                </p>
+                <div className="events-grid">
+                  {allEvents?.map((ev) => (
+                    <button
+                      key={ev._id}
+                      className="event-select-card sharp-card"
+                      onClick={() => setSelectedEventForCheckin(ev._id)}
+                    >
+                      <h3 className="font-display event-select-title">
+                        {ev.title}
+                      </h3>
+                      <p className="event-select-meta font-mono">
+                        {ev.date} · {ev.location}
+                      </p>
+                      <div className="event-select-info">
+                        <span className="font-mono">
+                          {allRegistrations?.filter((r) => r.eventId === ev._id)
+                            .length ?? 0}{" "}
+                          registrations
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedEventForCheckin && (
+              <div className="checkin-scanner-wrap">
+                <button
+                  className="btn-outline"
+                  onClick={() => setSelectedEventForCheckin(null)}
+                  style={{
+                    fontSize: "0.68rem",
+                    padding: "8px 16px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  &larr; Back to Events
+                </button>
+                <h3 className="font-display checkin-event-title">
+                  {allEvents?.find((e) => e._id === selectedEventForCheckin)
+                    ?.title ?? "Event"}
+                </h3>
+                <QRScanner
+                  eventId={selectedEventForCheckin}
+                  onVerificationSuccess={() => {}}
+                  onVerificationError={() => {}}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -892,9 +1010,20 @@ function AdminDashboard() {
         .status-free { background: rgba(34,109,11,0.15); color: #226d0b; border: 1px solid rgba(34,109,11,0.3); }
         .status-paid { background: rgba(223,166,81,0.15); color: #dfa651; border: 1px solid rgba(223,166,81,0.3); }
         .status-pending { background: rgba(203,27,58,0.1); color: #cb1b3a; border: 1px solid rgba(203,27,58,0.3); }
+        .checkin-events-list { margin-bottom: 32px; }
+        .checkin-label { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(245,240,232,0.5); margin-bottom: 20px; display: block; }
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .event-select-card { background: rgba(34,109,11,0.06); border: 1px solid rgba(34,109,11,0.15); padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .event-select-card:hover { background: rgba(34,109,11,0.12); border-color: rgba(34,109,11,0.3); transform: translateY(-2px); }
+        .event-select-title { font-size: 1.1rem; color: #f5f0e8; margin: 0; letter-spacing: 0.02em; }
+        .event-select-meta { font-size: 0.65rem; color: rgba(245,240,232,0.5); margin: 0; letter-spacing: 0.05em; }
+        .event-select-info { padding-top: 8px; border-top: 1px solid rgba(34,109,11,0.2); font-size: 0.7rem; color: rgba(245,240,232,0.6); }
+        .checkin-scanner-wrap { max-width: 600px; margin: 0 auto; }
+        .checkin-event-title { font-size: 1.8rem; color: #f5f0e8; margin-bottom: 24px; text-align: center; }
         @media (max-width: 768px) {
           .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
           .admin-stats { gap: 8px; }
+          .events-grid { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>

@@ -19,7 +19,6 @@ function Nav({ currentPath = "/" }: NavProps) {
 
   useEffect(() => {
     setSessionToken(localStorage.getItem("cq_session"));
-    // Lazy load AuthModal
     import("./auth/AuthModal").then((m) => setAuthModal(() => m.default));
   }, []);
 

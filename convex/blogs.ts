@@ -1,6 +1,16 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+async function resolveBlogImages(ctx: any, blog: any): Promise<any> {
+  const result = { ...blog };
+
+  if (blog.coverImageStorageId) {
+    result.coverImage = await ctx.storage.getUrl(blog.coverImageStorageId);
+  }
+
+  return result;
+}
+
 async function requireAdmin(ctx: any, sessionToken: string) {
   const session = await ctx.db
     .query("sessions")
@@ -15,21 +25,25 @@ async function requireAdmin(ctx: any, sessionToken: string) {
 export const listBlogs = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const blogs = await ctx.db
       .query("blogs")
       .filter((q) => q.eq(q.field("published"), true))
       .order("desc")
       .collect();
+
+    return Promise.all(blogs.map((b) => resolveBlogImages(ctx, b)));
   },
 });
 
 export const getBlogBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const blog = await ctx.db
       .query("blogs")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
+    if (!blog) return null;
+    return resolveBlogImages(ctx, blog);
   },
 });
 
@@ -38,7 +52,8 @@ export const listAllBlogs = query({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx, args.sessionToken);
     if (!admin) return null;
-    return await ctx.db.query("blogs").order("desc").collect();
+    const blogs = await ctx.db.query("blogs").order("desc").collect();
+    return Promise.all(blogs.map((b) => resolveBlogImages(ctx, b)));
   },
 });
 
@@ -56,6 +71,7 @@ export const createBlog = mutation({
     featured: v.boolean(),
     published: v.boolean(),
     coverImage: v.optional(v.string()),
+    coverImageStorageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx, args.sessionToken);
@@ -92,6 +108,7 @@ export const updateBlog = mutation({
     featured: v.boolean(),
     published: v.boolean(),
     coverImage: v.optional(v.string()),
+    coverImageStorageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx, args.sessionToken);
@@ -110,5 +127,23 @@ export const deleteBlog = mutation({
     if (!admin) return { success: false, error: "Unauthorized" };
     await ctx.db.delete(args.id);
     return { success: true };
+  },
+});
+
+export const generateBlogImageUploadUrl = mutation({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx, args.sessionToken);
+    if (!admin) return { success: false, error: "Unauthorized" };
+
+    const url = await ctx.storage.generateUploadUrl();
+    return { success: true, url };
+  },
+});
+
+export const getBlogImageUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
   },
 });

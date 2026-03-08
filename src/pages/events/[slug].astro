@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { ConvexHttpClient } from 'convex/browser';
 import { marked } from 'marked';
+import { api } from '../../../convex/_generated/api';
 
 const baseUrl = import.meta.env.BASE_URL;
 
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
   const client = new ConvexHttpClient(convexUrl);
 
   try {
-    const events = await client.query('events:listEvents');
+    const events = await client.query(api.events.listEvents);
     return events.map((event: any) => ({
       params: { slug: event.slug },
       props: { event },
@@ -44,7 +45,7 @@ if (!event && slug) {
 
   try {
     const client = new ConvexHttpClient(convexUrl);
-    const events = await client.query('events:listEvents');
+    const events = await client.query(api.events.listEvents);
     event = events.find((e: any) => e.slug === slug);
 
     if (!event) {

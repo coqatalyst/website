@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { withConvexProvider } from "../../lib/convex";
 import type { Id } from "../../../convex/_generated/dataModel";
+import RegistrationPass from "./RegistrationPass";
 
 const BASE = import.meta.env.BASE_URL ?? "/";
 
@@ -25,6 +26,9 @@ function UserDashboard() {
 
   const [payingId, setPayingId] = useState<string | null>(null);
   const [payResult, setPayResult] = useState<Record<string, string>>({});
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<
+    string | null
+  >(null);
 
   if (!sessionToken) return <NotLoggedIn />;
   if (user === undefined || registrations === undefined) return <Loader />;
@@ -45,6 +49,40 @@ function UserDashboard() {
       setPayingId(null);
     }
   };
+
+  // If viewing registration pass detail
+  if (selectedRegistrationId) {
+    return (
+      <div className="dash-wrap">
+        <div className="dash-header">
+          <div className="container">
+            <button
+              onClick={() => setSelectedRegistrationId(null)}
+              className="back-button"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#dfa651",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontFamily: "'Space Mono', monospace",
+                marginBottom: "16px",
+              }}
+            >
+              &larr; Back to Registrations
+            </button>
+            <h1 className="font-display dash-title">Event Pass</h1>
+          </div>
+        </div>
+        <div className="container dash-body">
+          <RegistrationPass
+            registrationId={selectedRegistrationId as Id<"registrations">}
+            sessionToken={sessionToken}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dash-wrap">
@@ -114,6 +152,18 @@ function UserDashboard() {
                       <div className="entry-code font-mono">
                         {newCode ?? reg.entryCode}
                       </div>
+                      <button
+                        className="btn-outline"
+                        style={{
+                          fontSize: "0.68rem",
+                          padding: "8px 16px",
+                          marginTop: "12px",
+                          width: "100%",
+                        }}
+                        onClick={() => setSelectedRegistrationId(reg._id)}
+                      >
+                        View QR Code →
+                      </button>
                     </div>
                   )}
 
@@ -186,6 +236,8 @@ function UserDashboard() {
         .pay-hint { font-size: 0.65rem; letter-spacing: 0.06em; color: #dfa651; }
         .sub-info { font-size: 0.68rem; letter-spacing: 0.06em; margin-top: 10px; }
         .sub-notes { font-size: 0.78rem; color: rgba(245,240,232,0.45); margin-top: 6px; line-height: 1.6; }
+        .back-button { transition: color 0.2s; }
+        .back-button:hover { color: #226d0b; }
       `}</style>
     </div>
   );

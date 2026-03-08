@@ -1,10 +1,8 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// ── helpers ────────────────────────────────────────────────────────────────
-
 function generateEntryCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no confusable chars
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
   for (let i = 0; i < 12; i++) {
     if (i > 0 && i % 4 === 0) code += "-";
@@ -21,8 +19,6 @@ async function getSessionUser(ctx: any, token: string) {
   if (!session || session.expiresAt < Date.now()) return null;
   return await ctx.db.get(session.userId);
 }
-
-// ── register for event ─────────────────────────────────────────────────────
 
 export const registerForEvent = mutation({
   args: {
@@ -46,7 +42,6 @@ export const registerForEvent = mutation({
     if (!event.published)
       return { success: false, error: "Event not available." };
 
-    // Check already registered
     const existing = await ctx.db
       .query("registrations")
       .withIndex("by_user_event", (q) =>
@@ -59,7 +54,6 @@ export const registerForEvent = mutation({
         error: "You are already registered for this event.",
       };
 
-    // Determine payment status
     const isFree = event.isFree || event.price === 0;
     let paymentStatus: "free" | "pending" | "paid" = "pending";
     let entryCode: string | undefined;
@@ -68,7 +62,6 @@ export const registerForEvent = mutation({
       paymentStatus = "free";
       entryCode = generateEntryCode();
     } else if (args.paymentOption === "pay_now") {
-      // In production integrate Razorpay. Here we simulate immediate payment.
       paymentStatus = "paid";
       entryCode = generateEntryCode();
     } else {
@@ -95,11 +88,14 @@ export const registerForEvent = mutation({
       createdAt: Date.now(),
     });
 
-    return { success: true, registrationId: regId, paymentStatus, entryCode };
+    return {
+      success: true,
+      registrationId: regId,
+      paymentStatus,
+      entryCode,
+    };
   },
 });
-
-// ── simulate payment (pay later → paid) ───────────────────────────────────
 
 export const completePayment = mutation({
   args: {
@@ -117,6 +113,7 @@ export const completePayment = mutation({
       return { success: false, error: "Already paid." };
 
     const entryCode = generateEntryCode();
+
     await ctx.db.patch(args.registrationId, {
       paymentStatus: "paid",
       paidAt: Date.now(),
@@ -127,8 +124,6 @@ export const completePayment = mutation({
     return { success: true, entryCode };
   },
 });
-
-// ── get registration by id ─────────────────────────────────────────────────
 
 export const getRegistration = query({
   args: { sessionToken: v.string(), registrationId: v.id("registrations") },
@@ -144,8 +139,6 @@ export const getRegistration = query({
     return { ...reg, event };
   },
 });
-
-// ── user dashboard: registrations ─────────────────────────────────────────
 
 export const getUserRegistrations = query({
   args: { sessionToken: v.string() },
@@ -168,8 +161,6 @@ export const getUserRegistrations = query({
     return result;
   },
 });
-
-// ── admin: get all registrations for an event ──────────────────────────────
 
 export const getEventRegistrations = query({
   args: { sessionToken: v.string(), eventId: v.id("events") },
@@ -202,8 +193,6 @@ export const getEventRegistrations = query({
   },
 });
 
-// ── admin: get all registrations (all events) ──────────────────────────────
-
 export const getAllRegistrations = query({
   args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
@@ -232,8 +221,6 @@ export const getAllRegistrations = query({
   },
 });
 
-// ── generate upload URL (for file submission <5MB) ─────────────────────────
-
 export const generateUploadUrl = mutation({
   args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
@@ -244,11 +231,45 @@ export const generateUploadUrl = mutation({
   },
 });
 
-// ── get file URL by storage ID ─────────────────────────────────────────────
-
 export const getFileUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
+export const verifyEntryCode = query({
+  args: { eventId: v.id("events"), entryCode: v.string() },
+  handler: async (ctx, args) => {
+    const registration = await ctx.db
+      .query("registrations")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .collect()
+      .then((regs) => regs.find((r) => r.entryCode === args.entryCode));
+
+    if (!registration) {
+      return { success: false, error: "Invalid entry code" };
+    }
+
+    const user = await ctx.db.get(registration.userId);
+    const event = await ctx.db.get(registration.eventId);
+
+    return {
+      success: true,
+      registration,
+      user: user
+        ? {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+          }
+        : null,
+      event: event
+        ? {
+            id: event._id,
+            title: event.title,
+          }
+        : null,
+    };
   },
 });
