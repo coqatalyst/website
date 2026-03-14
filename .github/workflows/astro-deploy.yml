@@ -22,8 +22,14 @@ jobs:
         with:
           node-version: 20
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
         run: npm install
+
+      - name: Clean build artifacts
+        run: rm -rf .astro dist node_modules/.vite
 
       - name: Generate Convex types
         run: npx convex codegen
