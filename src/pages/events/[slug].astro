@@ -60,7 +60,7 @@ if (!event) {
   return Astro.redirect('/404');
 }
 
-const descriptionHtml = await marked(event.description);
+const contentHtml = await marked(event.description);
 ---
 
 <Base
@@ -70,9 +70,9 @@ const descriptionHtml = await marked(event.description);
 >
   <div style="padding-top:67px;">
 
-    <header class="event-header">
-      <div class="event-header-bg"></div>
-      <div class="container event-header-inner">
+    <header class="post-header">
+      <div class="post-header-bg"></div>
+      <div class="container post-header-inner">
 
         <nav class="breadcrumb font-mono">
           <a href={baseUrl} class="bc-link">Home</a>
@@ -82,99 +82,50 @@ const descriptionHtml = await marked(event.description);
           <span class="bc-current">{event.title}</span>
         </nav>
 
-        <div class="event-meta-row">
+        <div class="post-meta-row">
           <span
-            class="event-tag font-mono"
+            class="post-tag font-mono"
             style={`color:${event.accent}; border-color:${event.accent}44;`}
           >
             {event.tag}
           </span>
-          <span class="event-badge font-mono">
-            {event.isFree ? 'Free' : `₹${event.price}`}
+          <span class="post-meta-txt font-mono">
+            {event.date} &middot; {event.location}
           </span>
         </div>
 
-        <h1 class="font-display event-title">{event.title}</h1>
+        <h1 class="font-display post-title">{event.title}</h1>
 
-        <p class="event-excerpt">{event.excerpt}</p>
+        <p class="post-excerpt">{event.excerpt}</p>
 
-        <div class="event-accent-line" style={`background: linear-gradient(90deg, ${event.accent}, #dfa651);`}></div>
+        <div class="post-accent-line" style={`background: linear-gradient(90deg, ${event.accent}, #dfa651);`}></div>
 
       </div>
     </header>
 
-    <div class="container event-layout">
-      <article class="event-content">
-        <div class="event-details">
-          <div class="detail-group">
-            <h3 class="detail-label font-mono">Date</h3>
-            <p class="detail-value">{event.date}</p>
-          </div>
-          <div class="detail-group">
-            <h3 class="detail-label font-mono">Location</h3>
-            <p class="detail-value">{event.location}</p>
-          </div>
-          <div class="detail-group">
-            <h3 class="detail-label font-mono">Capacity</h3>
-            <p class="detail-value">{event.capacity} seats</p>
-          </div>
-          <div class="detail-group">
-            <h3 class="detail-label font-mono">Price</h3>
-            <p class="detail-value">
-              {event.isFree ? 'Free' : `₹${event.price}`}
-            </p>
-          </div>
-        </div>
+    <div class="container post-layout">
+      <article class="post-content prose" set:html={contentHtml} />
 
-        {event.coverImage && (
-          <img
-            src={event.coverImage}
-            alt={event.title}
-            class="event-cover-image"
-          />
-        )}
-
-        <div class="event-description prose" set:html={descriptionHtml}>
-        </div>
-
-        {event.imageGallery && event.imageGallery.length > 0 && (
-          <div class="event-gallery">
-            <h2 class="font-display gallery-title">Gallery</h2>
-            <div class="gallery-grid">
-              {event.imageGallery.map((image: string) => (
-                <img
-                  src={image}
-                  alt={`${event.title} gallery`}
-                  class="gallery-image"
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </article>
-
-      <aside class="event-sidebar">
+      <aside class="post-sidebar">
         <div class="sidebar-card sharp-card">
-          <div class="sidebar-label font-mono">Quick Info</div>
-          <div class="sidebar-info">
-            <div class="info-row">
-              <span class="info-label">Date:</span>
-              <span class="info-value">{event.date}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Location:</span>
-              <span class="info-value">{event.location}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Seats:</span>
-              <span class="info-value">{event.capacity}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Price:</span>
-              <span class="info-value">
-                {event.isFree ? 'Free' : `₹${event.price}`}
-              </span>
-            </div>
+          <div class="sidebar-label font-mono">Date</div>
+          <div class="sidebar-date">{event.date}</div>
+        </div>
+
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Location</div>
+          <div class="sidebar-date">{event.location}</div>
+        </div>
+
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Capacity</div>
+          <div class="sidebar-date">{event.capacity} seats</div>
+        </div>
+
+        <div class="sidebar-card sharp-card">
+          <div class="sidebar-label font-mono">Price</div>
+          <div class="sidebar-date">
+            {event.isFree ? 'Free' : `₹${event.price}`}
           </div>
         </div>
 
@@ -184,7 +135,32 @@ const descriptionHtml = await marked(event.description);
       </aside>
     </div>
 
-    <div class="container event-footer">
+    {event.coverImage && (
+      <div class="container cover-image-section">
+        <img
+          src={event.coverImage}
+          alt={event.title}
+          class="cover-image"
+        />
+      </div>
+    )}
+
+    {event.imageGallery && event.imageGallery.length > 0 && (
+      <div class="container gallery-section">
+        <h2 class="gallery-title font-display">Gallery</h2>
+        <div class="gallery-grid">
+          {event.imageGallery.map((image: string) => (
+            <img
+              src={image}
+              alt={`${event.title} gallery`}
+              class="gallery-image"
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div class="container post-footer">
       <a href={`${baseUrl}events`} class="btn-primary">
         &larr; Back to Events
       </a>
@@ -197,270 +173,265 @@ const descriptionHtml = await marked(event.description);
 </Base>
 
 <style>
-  .event-header {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
-    padding: 60px 0 40px;
-    margin-bottom: 60px;
-  }
+.post-header {
+  padding: 72px 0 56px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.post-header-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(34,109,11,0.05) 0%, transparent 100%);
+  pointer-events: none;
+}
+.post-header-inner { position: relative; z-index: 1; }
 
-  .event-header-bg {
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background: radial-gradient(circle at 20% 50%, #226d0b, transparent 50%);
-    pointer-events: none;
-  }
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.bc-link { color: rgba(245,240,232,0.4); text-decoration: none; transition: color 0.2s; }
+.bc-link:hover { color: #dfa651; }
+.bc-sep { color: rgba(245,240,232,0.2); }
+.bc-current { color: rgba(245,240,232,0.7); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .event-header-inner {
-    position: relative;
-    z-index: 1;
-  }
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.post-tag {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
+}
+.post-meta-txt { font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(245,240,232,0.35); }
 
-  .breadcrumb {
-    display: flex;
-    gap: 8px;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    margin-bottom: 28px;
-    color: rgba(245, 240, 232, 0.5);
-  }
+.post-title {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #f5f0e8;
+  margin-bottom: 20px;
+  max-width: 900px;
+}
+.post-excerpt {
+  font-size: 1.1rem;
+  color: rgba(245,240,232,0.55);
+  line-height: 1.7;
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+.post-accent-line { height: 3px; width: 80px; border-radius: 2px; }
 
-  .bc-link {
-    color: rgba(245, 240, 232, 0.65);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
+.post-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 56px;
+  padding: 56px 24px 40px;
+  align-items: start;
+}
 
-  .bc-link:hover {
-    color: #226d0b;
-  }
+.prose {
+  color: rgba(245,240,232,0.75);
+  font-size: 1rem;
+  line-height: 1.85;
+  min-width: 0;
+}
+.prose :global(h2) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  color: #f5f0e8;
+  margin: 48px 0 16px;
+  line-height: 1;
+}
+.prose :global(h3) {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: rgba(245,240,232,0.85);
+  margin: 32px 0 12px;
+  line-height: 1;
+}
+.prose :global(h4) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #226d0b;
+  margin: 24px 0 8px;
+}
+.prose :global(p) { margin: 0 0 20px; }
+.prose :global(a) {
+  color: #dfa651;
+  text-decoration: underline;
+  text-decoration-color: rgba(223,166,81,0.4);
+  transition: text-decoration-color 0.2s;
+}
+.prose :global(a:hover) { text-decoration-color: #dfa651; }
+.prose :global(strong) { color: #f5f0e8; font-weight: 700; }
+.prose :global(em) { color: rgba(245,240,232,0.65); font-style: italic; }
+.prose :global(ul), .prose :global(ol) { margin: 0 0 20px 20px; }
+.prose :global(li) { margin-bottom: 8px; color: rgba(245,240,232,0.7); }
+.prose :global(li::marker) { color: #226d0b; }
+.prose :global(blockquote) {
+  border-left: 3px solid #226d0b;
+  margin: 28px 0;
+  padding: 16px 20px;
+  background: rgba(34,109,11,0.07);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  color: rgba(245,240,232,0.7);
+  font-style: italic;
+}
+.prose :global(code) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem;
+  background: rgba(34,109,11,0.12);
+  border: 1px solid rgba(34,109,11,0.25);
+  padding: 2px 6px;
+  color: #226d0b;
+}
+.prose :global(pre) {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 24px;
+  overflow-x: auto;
+  margin: 0 0 24px;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.prose :global(pre code) {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(245,240,232,0.8);
+  font-size: 0.85rem;
+}
+.prose :global(hr) {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  margin: 40px 0;
+}
+.prose :global(img) {
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+  margin: 20px 0;
+}
+.prose :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 24px;
+  font-size: 0.88rem;
+}
+.prose :global(th) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #226d0b;
+  border-bottom: 1px solid rgba(34,109,11,0.3);
+  padding: 10px 12px;
+  text-align: left;
+}
+.prose :global(td) {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(245,240,232,0.65);
+}
 
-  .bc-sep {
-    color: rgba(245, 240, 232, 0.3);
-  }
+.post-sidebar {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sidebar-card { padding: 20px; }
+.sidebar-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.3);
+  margin-bottom: 10px;
+}
+.sidebar-date { font-size: 0.88rem; color: rgba(245,240,232,0.65); }
+.sidebar-back { display: block; text-align: center; margin-top: 4px; }
 
-  .bc-current {
-    color: #226d0b;
-  }
+.cover-image-section {
+  padding: 40px 24px;
+}
 
-  .event-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
+.cover-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
-  .event-tag {
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    border: 1px solid;
-    padding: 4px 10px;
-    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
-  }
+.gallery-section {
+  padding: 40px 24px;
+}
 
-  .event-badge {
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    background: rgba(34, 109, 11, 0.15);
-    color: #226d0b;
-    padding: 4px 10px;
-    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
-  }
+.gallery-title {
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  color: #f5f0e8;
+  margin-bottom: 28px;
+}
 
-  .event-title {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    letter-spacing: -0.02em;
-    color: #f5f0e8;
-    line-height: 1.1;
-    margin-bottom: 16px;
-  }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
 
-  .event-excerpt {
-    font-size: 1.1rem;
-    color: rgba(245, 240, 232, 0.7);
-    line-height: 1.6;
-    margin-bottom: 32px;
-    max-width: 90%;
-  }
+.gallery-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
 
-  .event-accent-line {
-    height: 3px;
-    width: 60px;
-    border-radius: 2px;
-  }
+.gallery-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 24px rgba(34,109,11,0.2);
+}
 
-  .event-layout {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 48px;
-    margin-bottom: 60px;
-  }
+.post-footer {
+  padding: 40px 24px 80px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
 
-  .event-content {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-  }
-
-  .event-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 32px;
-    padding: 32px;
-    background: linear-gradient(135deg, rgba(34, 109, 11, 0.08), rgba(34, 109, 11, 0.03));
-    border: 1px solid rgba(34, 109, 11, 0.15);
-    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
-  }
-
-  .detail-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .detail-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(245, 240, 232, 0.4);
-  }
-
-  .detail-value {
-    font-size: 1rem;
-    color: #f5f0e8;
-    line-height: 1.4;
-  }
-
-  .event-cover-image {
-    width: 100%;
-    height: auto;
-    max-height: 400px;
-    object-fit: cover;
-    border: 1px solid rgba(34, 109, 11, 0.2);
-    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
-  }
-
-  .event-description {
-    font-size: 1rem;
-    color: rgba(245, 240, 232, 0.8);
-    line-height: 1.8;
-  }
-
-  .event-description p {
-    margin-bottom: 16px;
-  }
-
-  .event-gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .gallery-title {
-    font-size: 1.8rem;
-    color: #f5f0e8;
-  }
-
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-  }
-
-  .gallery-image {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-    border: 1px solid rgba(34, 109, 11, 0.2);
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-
-  .gallery-image:hover {
-    transform: scale(1.02);
-    box-shadow: 0 12px 24px rgba(34, 109, 11, 0.2);
-  }
-
-  .event-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    height: fit-content;
-    position: sticky;
-    top: 100px;
-  }
-
-  .sidebar-card {
-    padding: 24px;
-    background: linear-gradient(135deg, rgba(34, 109, 11, 0.08), rgba(34, 109, 11, 0.03));
-    border: 1px solid rgba(34, 109, 11, 0.15);
-  }
-
-  .sidebar-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(245, 240, 232, 0.5);
-    margin-bottom: 16px;
-  }
-
-  .sidebar-info {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .info-row {
-    display: flex;
-    gap: 8px;
-    font-size: 0.9rem;
-  }
-
-  .info-label {
-    color: rgba(245, 240, 232, 0.4);
-    font-weight: 500;
-    min-width: 60px;
-  }
-
-  .info-value {
-    color: #f5f0e8;
-  }
-
-  .sidebar-back {
-    margin-top: 8px;
-  }
-
-  .event-footer {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding-bottom: 80px;
-  }
-
-  @media (max-width: 768px) {
-    .event-layout {
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-
-    .event-sidebar {
-      position: static;
-    }
-
-    .event-excerpt {
-      max-width: 100%;
-    }
-
-    .event-details {
-      grid-template-columns: 1fr;
-    }
-
-    .gallery-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-  }
+@media (max-width: 900px) {
+  .post-layout { grid-template-columns: 1fr; }
+  .post-sidebar { position: static; flex-direction: row; flex-wrap: wrap; }
+  .sidebar-card { flex: 1; min-width: 140px; }
+  .sidebar-back { width: 100%; }
+}
+@media (max-width: 600px) {
+  .post-title { font-size: clamp(2rem, 9vw, 3rem); }
+  .post-sidebar { flex-direction: column; }
+  .sidebar-card { flex: none; }
+}
 </style>
