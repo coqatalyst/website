@@ -45,8 +45,7 @@ if (!blog && slug) {
 
   try {
     const client = new ConvexHttpClient(convexUrl);
-    const blogs = await client.query(api.blogs.listBlogs);
-    blog = blogs.find((b: any) => b.slug === slug);
+    blog = await client.query(api.blogs.getBlogBySlug, { slug });
 
     if (!blog) {
       return Astro.redirect('/404');

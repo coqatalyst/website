@@ -45,8 +45,7 @@ if (!event && slug) {
 
   try {
     const client = new ConvexHttpClient(convexUrl);
-    const events = await client.query(api.events.listEvents);
-    event = events.find((e: any) => e.slug === slug);
+    event = await client.query(api.events.getEventBySlug, { slug });
 
     if (!event) {
       return Astro.redirect('/404');
