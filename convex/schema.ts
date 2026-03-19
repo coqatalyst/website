@@ -80,6 +80,17 @@ export default defineSchema({
     submissionFileName: v.optional(v.string()),
     submissionGdriveLink: v.optional(v.string()),
     submissionNotes: v.optional(v.string()),
+    paymentProofStorageId: v.optional(v.string()),
+    paymentProofUrl: v.optional(v.string()),
+    paymentVerificationStatus: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("approved"),
+        v.literal("rejected"),
+      ),
+    ),
+    paymentVerificationNotes: v.optional(v.string()),
+    upiTransactionId: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])

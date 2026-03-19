@@ -10,19 +10,26 @@ interface Props {
   onClose: () => void;
 }
 
+const BASE = import.meta.env.BASE_URL ?? "/";
+
 function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
   const event = useQuery(api.events.listEvents);
   const ev = event?.find((e) => e._id === eventId);
 
   const registerMutation = useMutation(api.registrations.registerForEvent);
 
-  const [paymentOption, setPaymentOption] = useState<"pay_now" | "pay_later">("pay_now");
-  const [submissionType, setSubmissionType] = useState<"gdrive_link" | "none">("none");
+  
+  const [submissionType, setSubmissionType] = useState<"gdrive_link" | "none">(
+    "none",
+  );
   const [gdriveLink, setGdriveLink] = useState("");
   const [submissionNotes, setSubmissionNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ entryCode?: string; paymentStatus?: string } | null>(null);
+  const [result, setResult] = useState<{
+    entryCode?: string;
+    paymentStatus?: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +43,10 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
       const res = await registerMutation({
         sessionToken,
         eventId,
-        paymentOption: ev?.isFree ? "pay_now" : paymentOption,
+        paymentOption: "pay_now",
         submissionType,
-        submissionGdriveLink: submissionType === "gdrive_link" ? gdriveLink.trim() : undefined,
+        submissionGdriveLink:
+          submissionType === "gdrive_link" ? gdriveLink.trim() : undefined,
         submissionNotes: submissionNotes.trim() || undefined,
       });
       if (!res.success) {
@@ -55,100 +63,213 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
 
   if (!ev) return null;
 
+  const isFreeEvent = ev.isFree;
+  const isPaidEventWithPendingPayment =
+    !isFreeEvent && result?.paymentStatus === "pending";
+
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="reg-modal sharp-card">
-        <button className="modal-close font-mono" onClick={onClose}>✕</button>
+        <button className="modal-close font-mono" onClick={onClose}>
+          ✕
+        </button>
 
         {result ? (
           <div className="reg-success">
-            <div className="success-icon font-display">✓</div>
-            <h2 className="font-display reg-title" style={{ color: "#226d0b" }}>REGISTERED!</h2>
-            <p className="reg-subtitle">You're in for <strong>{ev.title}</strong></p>
+            <div
+              className="success-icon font-display"
+              style={{ color: isFreeEvent ? "#226d0b" : "#dfa651" }}
+            >
+              ✓
+            </div>
+            <h2
+              className="font-display reg-title"
+              style={{ color: isFreeEvent ? "#226d0b" : "#dfa651" }}
+            >
+              REGISTERED!
+            </h2>
 
-            {result.entryCode && (
+            {/* Dynamic subtitle based on event type */}
+            <p className="reg-subtitle">
+              You're registered for <strong>{ev.title}</strong>
+            </p>
+
+            {/* Next steps indicator for paid events */}
+            {isPaidEventWithPendingPayment && (
+              <p className="reg-subtitle-secondary">
+                Payment verification required to get your entry code
+              </p>
+            )}
+
+            {/* Entry code for free events */}
+            {isFreeEvent && result.entryCode && (
               <div className="entry-code-wrap">
                 <p className="entry-label font-mono">Your Entry Code</p>
                 <div className="entry-code font-mono">{result.entryCode}</div>
-                <p className="entry-hint font-mono">Save this — you'll need it at the door.</p>
+                <p className="entry-hint font-mono">
+                  Save this — you'll need it at the door.
+                </p>
               </div>
             )}
 
-            {result.paymentStatus === "pending" && (
-              <div className="pending-notice font-mono">
-                <span className="pending-dot"></span>
-                Payment pending — bring payment to the event.
+            {/* Payment verification guidance for paid events */}
+            {isPaidEventWithPendingPayment && (
+              <div className="verification-notice">
+                <div className="notice-header font-mono">
+                  <span className="pending-dot"></span>
+                  Payment Verification Required
+                </div>
+                <div className="notice-content">
+                  <p className="notice-text font-mono">
+                    <strong>Next Step:</strong> Upload your UPI payment
+                    screenshot in your dashboard
+                  </p>
+                  <p className="notice-text font-mono">
+                    Once verified by admins, you'll receive your entry code via
+                    email.
+                  </p>
+                  <p className="notice-timeline font-mono">
+                    Verification usually takes 1-2 hours.
+                  </p>
+                </div>
               </div>
             )}
 
-            <button className="btn-primary" style={{ marginTop: 24 }} onClick={onClose}>Done →</button>
+                        {isPaidEventWithPendingPayment ? (
+              <a
+                href={`${BASE}dashboard`}
+                className="btn-primary"
+                style={{ marginTop: 24, display: "inline-block", textDecoration: "none" }}
+              >
+                Go to Dashboard &rarr;
+              </a>
+            ) : (
+              <button
+                className="btn-primary"
+                style={{ marginTop: 24 }}
+                onClick={onClose}
+              >
+                Done &rarr;
+              </button>
+            )}
           </div>
         ) : (
           <>
             <div className="reg-header">
-              <div className="section-tag" style={{ marginBottom: 10 }}>Register</div>
+              <div className="section-tag" style={{ marginBottom: 10 }}>
+                Register
+              </div>
               <h2 className="font-display reg-title">{ev.title}</h2>
               <div className="reg-meta font-mono">
                 <span>{ev.date}</span>
                 <span className="meta-sep">·</span>
                 <span>{ev.location}</span>
                 <span className="meta-sep">·</span>
-                <span style={{ color: ev.isFree ? "#226d0b" : "#dfa651" }}>{ev.isFree ? "Free" : `₹${ev.price}`}</span>
+                <span style={{ color: ev.isFree ? "#226d0b" : "#dfa651" }}>
+                  {ev.isFree ? "Free" : `₹${ev.price}`}
+                </span>
               </div>
             </div>
 
+            
             <form onSubmit={handleSubmit} className="reg-form">
               {!ev.isFree && (
-                <div className="field">
-                  <label className="field-label font-mono">Payment</label>
-                  <div className="radio-group">
-                    <label className={`radio-option${paymentOption === "pay_now" ? " selected" : ""}`}>
-                      <input type="radio" name="payment" value="pay_now" checked={paymentOption === "pay_now"} onChange={() => setPaymentOption("pay_now")} />
-                      <span className="radio-label font-mono">Pay Now (₹{ev.price})</span>
-                      <span className="radio-desc">Confirm your spot immediately</span>
-                    </label>
-                    <label className={`radio-option${paymentOption === "pay_later" ? " selected" : ""}`}>
-                      <input type="radio" name="payment" value="pay_later" checked={paymentOption === "pay_later"} onChange={() => setPaymentOption("pay_later")} />
-                      <span className="radio-label font-mono">Pay Later</span>
-                      <span className="radio-desc">Entry code issued after payment at event</span>
-                    </label>
-                  </div>
+                <div className="field" style={{ padding: "16px", background: "rgba(223,166,81,0.08)", border: "1px solid rgba(223,166,81,0.2)", borderRadius: "4px" }}>
+                  <label className="field-label font-mono" style={{ color: "#dfa651", fontSize: "0.75rem", marginBottom: "8px" }}>Payment Details</label>
+                  <p style={{ fontSize: "0.85rem", color: "rgba(245,240,232,0.8)", margin: "0 0 8px 0" }}>
+                    Registration fee: <strong>₹{ev.price}</strong>
+                  </p>
+                  <p style={{ fontSize: "0.7rem", color: "rgba(245,240,232,0.5)", lineHeight: 1.4, margin: 0 }}>
+                    After confirming your registration, you will be redirected to your dashboard to complete the payment via UPI and upload a screenshot for verification.
+                  </p>
                 </div>
               )}
-
-              <div className="field">
-                <label className="field-label font-mono">Project / Submission (Optional)</label>
+<div className="field">
+                <label className="field-label font-mono">
+                  Project / Submission (Optional)
+                </label>
                 <div className="radio-group">
-                  <label className={`radio-option${submissionType === "none" ? " selected" : ""}`}>
-                    <input type="radio" name="sub" value="none" checked={submissionType === "none"} onChange={() => setSubmissionType("none")} />
+                  <label
+                    className={`radio-option${submissionType === "none" ? " selected" : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="sub"
+                      value="none"
+                      checked={submissionType === "none"}
+                      onChange={() => setSubmissionType("none")}
+                    />
                     <span className="radio-label font-mono">No submission</span>
                   </label>
-                  <label className={`radio-option${submissionType === "gdrive_link" ? " selected" : ""}`}>
-                    <input type="radio" name="sub" value="gdrive_link" checked={submissionType === "gdrive_link"} onChange={() => setSubmissionType("gdrive_link")} />
-                    <span className="radio-label font-mono">Google Drive / Cloud Link</span>
-                    <span className="radio-desc">Share a link to your project folder or file</span>
+                  <label
+                    className={`radio-option${submissionType === "gdrive_link" ? " selected" : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="sub"
+                      value="gdrive_link"
+                      checked={submissionType === "gdrive_link"}
+                      onChange={() => setSubmissionType("gdrive_link")}
+                    />
+                    <span className="radio-label font-mono">
+                      Google Drive / Cloud Link
+                    </span>
+                    <span className="radio-desc">
+                      Share a link to your project folder or file
+                    </span>
                   </label>
                 </div>
               </div>
 
               {submissionType === "gdrive_link" && (
                 <div className="field">
-                  <label className="field-label font-mono">Drive / Cloud Link</label>
-                  <input className="sharp-input" type="url" value={gdriveLink} onChange={e => setGdriveLink(e.target.value)} placeholder="https://drive.google.com/..." required />
-                  <p className="field-hint font-mono">Make sure the link is set to "Anyone with the link can view"</p>
+                  <label className="field-label font-mono">
+                    Drive / Cloud Link
+                  </label>
+                  <input
+                    className="sharp-input"
+                    type="url"
+                    value={gdriveLink}
+                    onChange={(e) => setGdriveLink(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    required
+                  />
+                  <p className="field-hint font-mono">
+                    Make sure the link is set to "Anyone with the link can view"
+                  </p>
                 </div>
               )}
 
               <div className="field">
-                <label className="field-label font-mono">Notes (Optional)</label>
-                <textarea className="sharp-input" rows={3} value={submissionNotes} onChange={e => setSubmissionNotes(e.target.value)} placeholder="Any additional info about your project or attendance…" style={{ resize: "vertical" }} />
+                <label className="field-label font-mono">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  className="sharp-input"
+                  rows={3}
+                  value={submissionNotes}
+                  onChange={(e) => setSubmissionNotes(e.target.value)}
+                  placeholder="Any additional info about your project or attendance…"
+                  style={{ resize: "vertical" }}
+                />
               </div>
 
               {error && <p className="reg-error font-mono">{error}</p>}
 
               <div className="reg-actions">
-                <button className="btn-outline" type="button" onClick={onClose}>Cancel</button>
-                <button className="btn-primary" type="submit" disabled={loading}>{loading ? "Registering…" : "Confirm Registration →"}</button>
+                <button className="btn-outline" type="button" onClick={onClose}>
+                  Cancel
+                </button>
+                <button
+                  className="btn-primary"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? "Registering…" : "Confirm Registration →"}
+                </button>
               </div>
             </form>
           </>
@@ -162,7 +283,8 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
         .modal-close:hover { color: #cb1b3a; }
         .reg-header { margin-bottom: 28px; }
         .reg-title { font-size: 1.8rem; letter-spacing: 0.04em; color: #f5f0e8; line-height: 1; margin-bottom: 10px; }
-        .reg-subtitle { color: rgba(245,240,232,0.6); font-size: 0.9rem; margin-bottom: 16px; }
+        .reg-subtitle { color: rgba(245,240,232,0.6); font-size: 0.9rem; margin-bottom: 8px; }
+        .reg-subtitle-secondary { color: rgba(223,166,81,0.8); font-size: 0.85rem; margin-bottom: 20px; font-weight: 500; letter-spacing: 0.02em; }
         .reg-meta { display: flex; gap: 8px; align-items: center; font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(245,240,232,0.4); flex-wrap: wrap; }
         .meta-sep { color: rgba(255,255,255,0.15); }
         .reg-form { display: flex; flex-direction: column; gap: 20px; }
@@ -183,7 +305,11 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
         .entry-label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 10px; }
         .entry-code { font-size: 1.8rem; font-weight: bold; letter-spacing: 0.15em; color: #fff; }
         .entry-hint { font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.3); margin-top: 10px; }
-        .pending-notice { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 1px solid rgba(223,166,81,0.3); background: rgba(223,166,81,0.08); font-size: 0.68rem; letter-spacing: 0.08em; color: #dfa651; }
+        .verification-notice { margin: 28px 0; padding: 20px; border: 1px solid rgba(223,166,81,0.3); background: rgba(223,166,81,0.08); border-radius: 4px; }
+        .notice-header { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dfa651; margin-bottom: 14px; font-weight: 600; }
+        .notice-content { display: flex; flex-direction: column; gap: 10px; }
+        .notice-text { font-size: 0.7rem; letter-spacing: 0.05em; color: rgba(223,166,81,0.9); line-height: 1.5; }
+        .notice-timeline { font-size: 0.65rem; color: rgba(223,166,81,0.6); margin-top: 6px; }
         .pending-dot { width: 6px; height: 6px; border-radius: 50%; background: #dfa651; flex-shrink: 0; }
       `}</style>
     </div>

@@ -8,7 +8,7 @@ import QRScanner from "../checkin/QRScanner";
 
 const BASE = import.meta.env.BASE_URL ?? "/";
 
-type Tab = "events" | "blogs" | "registrations" | "checkin";
+type Tab = "events" | "blogs" | "registrations" | "checkin" | "payments";
 
 const ACCENT_OPTIONS = [
   { label: "Green", value: "#226d0b" },
@@ -69,6 +69,11 @@ function AdminDashboard() {
   const [selectedEventForCheckin, setSelectedEventForCheckin] =
     useState<Id<"events"> | null>(null);
 
+  const [selectedRegistration, setSelectedRegistration] =
+    useState<Id<"registrations"> | null>(null);
+  const [verifyNotes, setVerifyNotes] = useState("");
+  const [verifyMsg, setVerifyMsg] = useState("");
+
   useEffect(() => {
     const token = localStorage.getItem("cq_session");
     setSessionToken(token);
@@ -91,6 +96,10 @@ function AdminDashboard() {
     api.registrations.getAllRegistrations,
     sessionToken ? { sessionToken } : "skip",
   );
+  const pendingPayments = useQuery(
+    api.registrations.getPendingPaymentVerifications,
+    sessionToken ? { sessionToken } : "skip",
+  );
 
   const createEvent = useMutation(api.events.createEvent);
   const updateEvent = useMutation(api.events.updateEvent);
@@ -99,6 +108,8 @@ function AdminDashboard() {
   const createBlog = useMutation(api.blogs.createBlog);
   const updateBlog = useMutation(api.blogs.updateBlog);
   const deleteBlog = useMutation(api.blogs.deleteBlog);
+
+  const verifyPayment = useMutation(api.registrations.verifyPayment);
 
   if (!sessionLoaded) return <Loader />;
   if (!sessionToken) return <Redirect to={`${BASE}`} msg="Please sign in." />;
@@ -247,17 +258,23 @@ function AdminDashboard() {
       <div className="admin-tabs-bar">
         <div className="container">
           <div className="admin-tabs">
-            {(["events", "blogs", "registrations", "checkin"] as Tab[]).map(
-              (t) => (
-                <button
-                  key={t}
-                  className={`admin-tab font-mono${tab === t ? " active" : ""}`}
-                  onClick={() => setTab(t)}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ),
-            )}
+            {(
+              [
+                "events",
+                "blogs",
+                "registrations",
+                "checkin",
+                "payments",
+              ] as Tab[]
+            ).map((t) => (
+              <button
+                key={t}
+                className={`admin-tab font-mono${tab === t ? " active" : ""}`}
+                onClick={() => setTab(t)}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -950,6 +967,223 @@ function AdminDashboard() {
             )}
           </div>
         )}
+
+        {tab === "payments" && (
+          <div className="tab-content">
+            <h2 className="font-display section-title">PENDING PAYMENTS</h2>
+            {verifyMsg && (
+              <div
+                className={`form-msg ${
+                  verifyMsg.startsWith("✓") ? "success" : "error"
+                } font-mono`}
+                style={{ marginBottom: "20px" }}
+              >
+                {verifyMsg}
+              </div>
+            )}
+            {!pendingPayments?.length ? (
+              <p className="empty-list font-mono">No pending payments.</p>
+            ) : (
+              <div className="list-section">
+                {pendingPayments.map((p) => (
+                  <div
+                    key={p._id}
+                    className="list-row sharp-card"
+                    style={{ alignItems: "flex-start" }}
+                  >
+                    <div className="list-row-info">
+                      <div
+                        className="list-row-title font-display"
+                        style={{ fontSize: "1.2rem", color: "#dfa651" }}
+                      >
+                        ₹{p.amount}
+                      </div>
+                      <div
+                        className="list-row-meta font-mono"
+                        style={{
+                          marginTop: "8px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "4px",
+                        }}
+                      >
+                        <span>
+                          <strong>Name:</strong> {p.registrant?.name}
+                        </span>
+                        <span>
+                          <strong>Email:</strong> {p.registrant?.email}
+                        </span>
+                        <span>
+                          <strong>Event:</strong> {(p.event as any)?.title}
+                        </span>
+                      </div>
+                      {p.paymentProofUrl && (
+                        <div
+                          style={{
+                            marginTop: "16px",
+                            borderRadius: "4px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: "0.7rem",
+                              color: "rgba(245, 240, 232, 0.5)",
+                              padding: "0 0 8px 0",
+                              margin: 0,
+                            }}
+                          >
+                            Payment Screenshot:
+                          </p>
+                          <img
+                            src={p.paymentProofUrl}
+                            alt="Payment Proof"
+                            onError={(e) => {
+                              console.error(
+                                "Failed to load image:",
+                                p.paymentProofUrl,
+                              );
+                              (e.target as HTMLImageElement).src =
+                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3Ctext x='50' y='50' text-anchor='middle' dy='.3em' fill='%23999' font-size='12'%3EImage Error%3C/text%3E%3C/svg%3E";
+                            }}
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: "400px",
+                              display: "block",
+                              background: "#000",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "4px",
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selectedRegistration === p._id ? (
+                        <div
+                          style={{
+                            marginTop: "16px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                          }}
+                        >
+                          <textarea
+                            className="sharp-input font-mono"
+                            placeholder="Verification notes (optional)"
+                            value={verifyNotes}
+                            onChange={(e) => setVerifyNotes(e.target.value)}
+                            rows={3}
+                            style={{
+                              resize: "vertical",
+                              width: "100%",
+                              maxWidth: "400px",
+                            }}
+                          />
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <button
+                              className="btn-primary"
+                              style={{
+                                padding: "8px 16px",
+                                fontSize: "0.7rem",
+                              }}
+                              onClick={async () => {
+                                setVerifyMsg("");
+                                if (!sessionToken) return;
+                                try {
+                                  const res = await verifyPayment({
+                                    sessionToken,
+                                    registrationId: p._id,
+                                    approved: true,
+                                    notes: verifyNotes,
+                                  });
+                                  if (res.success) {
+                                    setVerifyMsg("✓ Payment approved.");
+                                    setSelectedRegistration(null);
+                                    setVerifyNotes("");
+                                  } else {
+                                    setVerifyMsg("✗ " + res.error);
+                                  }
+                                } catch (e: any) {
+                                  setVerifyMsg("✗ " + e.message);
+                                }
+                              }}
+                            >
+                              Approve Payment
+                            </button>
+                            <button
+                              className="btn-outline"
+                              style={{
+                                padding: "8px 16px",
+                                fontSize: "0.7rem",
+                                color: "#cb1b3a",
+                                borderColor: "rgba(203,27,58,0.3)",
+                              }}
+                              onClick={async () => {
+                                setVerifyMsg("");
+                                if (!sessionToken) return;
+                                try {
+                                  const res = await verifyPayment({
+                                    sessionToken,
+                                    registrationId: p._id,
+                                    approved: false,
+                                    notes: verifyNotes,
+                                  });
+                                  if (res.success) {
+                                    setVerifyMsg("✓ Payment rejected.");
+                                    setSelectedRegistration(null);
+                                    setVerifyNotes("");
+                                  } else {
+                                    setVerifyMsg("✗ " + res.error);
+                                  }
+                                } catch (e: any) {
+                                  setVerifyMsg("✗ " + e.message);
+                                }
+                              }}
+                            >
+                              Reject Payment
+                            </button>
+                            <button
+                              className="btn-outline"
+                              style={{
+                                padding: "8px 16px",
+                                fontSize: "0.7rem",
+                              }}
+                              onClick={() => {
+                                setSelectedRegistration(null);
+                                setVerifyNotes("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: "16px" }}>
+                          <button
+                            className="btn-primary"
+                            style={{ padding: "8px 16px", fontSize: "0.7rem" }}
+                            onClick={() => {
+                              setSelectedRegistration(p._id);
+                              setVerifyNotes("");
+                              setVerifyMsg("");
+                            }}
+                          >
+                            Review
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -963,9 +1197,9 @@ function AdminDashboard() {
         .stat-chip { padding: 16px 24px; display: flex; flex-direction: column; gap: 4px; min-width: 100px; }
         .stat-num { font-size: 1.8rem; background: linear-gradient(135deg,#226d0b,#dfa651); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-lbl { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,240,232,0.4); }
-        .admin-tabs-bar { border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.3); }
-        .admin-tabs { display: flex; gap: 0; }
-        .admin-tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 16px 24px; cursor: pointer; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(245,240,232,0.4); transition: color 0.2s, border-color 0.2s; }
+        .admin-tabs-bar { border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.3); overflow-x: auto; overflow-y: hidden; }
+        .admin-tabs { display: flex; gap: 0; flex-wrap: nowrap; }
+        .admin-tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 16px 24px; cursor: pointer; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(245,240,232,0.4); transition: color 0.2s, border-color 0.2s; white-space: nowrap; flex-shrink: 0; }
         .admin-tab.active { color: #dfa651; border-bottom-color: #dfa651; }
         .admin-tab:hover:not(.active) { color: rgba(245,240,232,0.7); }
         .admin-body { padding: 40px 24px 80px; }
@@ -1024,6 +1258,8 @@ function AdminDashboard() {
           .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
           .admin-stats { gap: 8px; }
           .events-grid { grid-template-columns: 1fr; }
+          .admin-tab { padding: 12px 16px; font-size: 0.62rem; }
+          .admin-tabs-bar { -webkit-overflow-scrolling: touch; }
         }
       `}</style>
     </div>

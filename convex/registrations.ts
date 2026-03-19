@@ -1,4 +1,13 @@
-import { mutation, query } from "./_generated/server";
+import {
+  mutation,
+  query,
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
+import { internal } from "./_generated/api";
+import { Resend } from "resend";
 import { v } from "convex/values";
 
 function generateEntryCode(): string {
@@ -61,9 +70,6 @@ export const registerForEvent = mutation({
     if (isFree) {
       paymentStatus = "free";
       entryCode = generateEntryCode();
-    } else if (args.paymentOption === "pay_now") {
-      paymentStatus = "paid";
-      entryCode = generateEntryCode();
     } else {
       paymentStatus = "pending";
     }
@@ -74,10 +80,7 @@ export const registerForEvent = mutation({
       paymentStatus,
       paymentOption: args.paymentOption,
       amount: event.price,
-      paidAt:
-        paymentStatus === "paid" || paymentStatus === "free"
-          ? Date.now()
-          : undefined,
+      paidAt: paymentStatus === "free" ? Date.now() : undefined,
       entryCode,
       passGenerated: !!entryCode,
       submissionType: args.submissionType,
@@ -234,7 +237,31 @@ export const generateUploadUrl = mutation({
 export const getFileUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId);
+    let storageId = args.storageId.trim();
+
+    // Handle case where storageId might be stringified JSON
+    if (storageId.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(storageId);
+        storageId = parsed.storageId || parsed;
+        if (typeof storageId === "object") {
+          storageId = parsed.storageId || "";
+        }
+      } catch {
+        // Not JSON, continue with original value
+      }
+    }
+
+    if (!storageId) {
+      return null;
+    }
+
+    try {
+      return await ctx.storage.getUrl(storageId);
+    } catch (error) {
+      console.error("Failed to get storage URL:", error);
+      return null;
+    }
   },
 });
 
@@ -271,5 +298,187 @@ export const verifyEntryCode = query({
           }
         : null,
     };
+  },
+});
+
+export const uploadPaymentProof = mutation({
+  args: {
+    sessionToken: v.string(),
+    registrationId: v.id("registrations"),
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getSessionUser(ctx, args.sessionToken);
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const reg = await ctx.db.get(args.registrationId);
+    if (!reg) return { success: false, error: "Registration not found." };
+    if (reg.userId !== user._id) return { success: false, error: "Forbidden." };
+
+    // Parse and validate the storage ID
+    let storageId = args.storageId.trim();
+
+    // Handle case where storageId might be stringified JSON
+    if (storageId.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(storageId);
+        storageId = parsed.storageId || parsed;
+        if (typeof storageId === "object") {
+          storageId = parsed.storageId || "";
+        }
+      } catch {
+        // Not JSON, continue with original value
+      }
+    }
+
+    if (!storageId) {
+      return { success: false, error: "Invalid storage ID format." };
+    }
+
+    let paymentProofUrl: string | null;
+    try {
+      paymentProofUrl = await ctx.storage.getUrl(storageId);
+    } catch (error) {
+      console.error("Failed to get storage URL:", error);
+      return {
+        success: false,
+        error:
+          "Failed to resolve payment proof URL. Please try uploading again.",
+      };
+    }
+
+    if (!paymentProofUrl)
+      return { success: false, error: "Failed to resolve image URL." };
+
+    await ctx.db.patch(args.registrationId, {
+      paymentProofStorageId: storageId,
+      paymentProofUrl: paymentProofUrl,
+      paymentVerificationStatus: "pending",
+    });
+
+    return {
+      success: true,
+      message: "Payment proof submitted for verification.",
+    };
+  },
+});
+
+export const verifyPayment = mutation({
+  args: {
+    sessionToken: v.string(),
+    registrationId: v.id("registrations"),
+    approved: v.boolean(),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getSessionUser(ctx, args.sessionToken);
+    if (!user?.isAdmin)
+      return { success: false, error: "Admin access required." };
+
+    const reg = await ctx.db.get(args.registrationId);
+    if (!reg) return { success: false, error: "Registration not found." };
+
+    if (args.approved) {
+      const entryCode = generateEntryCode();
+      await ctx.db.patch(args.registrationId, {
+        paymentVerificationStatus: "approved",
+        paymentVerificationNotes: args.notes,
+        paymentStatus: "paid",
+        paidAt: Date.now(),
+        entryCode,
+        passGenerated: true,
+      });
+
+      const registrant = await ctx.db.get(reg.userId);
+      const event = await ctx.db.get(reg.eventId);
+
+      if (registrant && event) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.registrations.sendPaymentEmail,
+          {
+            email: registrant.email,
+            name: registrant.name,
+            eventName: event.title,
+            entryCode: entryCode,
+          },
+        );
+      }
+
+      return { success: true, entryCode };
+    } else {
+      await ctx.db.patch(args.registrationId, {
+        paymentVerificationStatus: "rejected",
+        paymentVerificationNotes: args.notes,
+      });
+      return { success: true };
+    }
+  },
+});
+
+export const sendPaymentEmail = internalAction({
+  args: {
+    email: v.string(),
+    name: v.string(),
+    eventName: v.string(),
+    entryCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+      await resend.emails.send({
+        from: "CoQatalyst <noreply@coqatalyst.com>",
+        to: [args.email],
+        subject: `Registration Confirmed: ${args.eventName}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Payment Verified!</h2>
+            <p>Hi ${args.name},</p>
+            <p>Great news! Your payment for <strong>${args.eventName}</strong> has been successfully verified.</p>
+            <p>Your registration is now complete. Below is your entry code, which you'll need at the door:</p>
+            <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+              ${args.entryCode}
+            </div>
+            <p>You can also view this code anytime from your <a href="https://coqatalyst.com/dashboard">Dashboard</a>.</p>
+            <p>See you there!</p>
+            <p>- The CoQatalyst Team</p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send payment confirmation email:", error);
+    }
+  },
+});
+
+export const getPendingPaymentVerifications = query({
+  args: { sessionToken: v.string() },
+  handler: async (ctx, args) => {
+    const user = await getSessionUser(ctx, args.sessionToken);
+    if (!user?.isAdmin) return null;
+
+    const regs = await ctx.db.query("registrations").collect();
+    const pending = regs.filter(
+      (r) => r.paymentVerificationStatus === "pending" && r.paymentProofUrl,
+    );
+
+    const result = await Promise.all(
+      pending.map(async (r) => {
+        const registrant = await ctx.db.get(r.userId);
+        const event = await ctx.db.get(r.eventId);
+        return {
+          ...r,
+          registrant: registrant
+            ? {
+                id: registrant._id,
+                name: registrant.name,
+                email: registrant.email,
+              }
+            : null,
+          event,
+        };
+      }),
+    );
+    return result.sort((a, b) => b.createdAt - a.createdAt);
   },
 });

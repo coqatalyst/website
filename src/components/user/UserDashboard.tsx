@@ -4,11 +4,13 @@ import { api } from "../../../convex/_generated/api";
 import { withConvexProvider } from "../../lib/convex";
 import type { Id } from "../../../convex/_generated/dataModel";
 import RegistrationPass from "./RegistrationPass";
+import { UPIPaymentUpload } from "../payments/UPIPaymentUpload";
 
 const BASE = import.meta.env.BASE_URL ?? "/";
 
 function UserDashboard() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   useEffect(() => {
     setSessionToken(localStorage.getItem("cq_session"));
@@ -22,10 +24,7 @@ function UserDashboard() {
     api.registrations.getUserRegistrations,
     sessionToken ? { sessionToken } : "skip",
   );
-  const completePayment = useMutation(api.registrations.completePayment);
 
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [payResult, setPayResult] = useState<Record<string, string>>({});
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<
     string | null
   >(null);
@@ -33,22 +32,6 @@ function UserDashboard() {
   if (!sessionToken) return <NotLoggedIn />;
   if (user === undefined || registrations === undefined) return <Loader />;
   if (!user) return <NotLoggedIn />;
-
-  const handleCompletePayment = async (regId: Id<"registrations">) => {
-    if (!sessionToken) return;
-    setPayingId(regId);
-    try {
-      const res = await completePayment({
-        sessionToken,
-        registrationId: regId,
-      });
-      if (res.success && res.entryCode) {
-        setPayResult((p) => ({ ...p, [regId]: res.entryCode! }));
-      }
-    } finally {
-      setPayingId(null);
-    }
-  };
 
   // If viewing registration pass detail
   if (selectedRegistrationId) {
@@ -127,7 +110,15 @@ function UserDashboard() {
           <div className="reg-list">
             {registrations?.map((reg) => {
               const ev = (reg as any).event;
-              const newCode = payResult[reg._id];
+              const showUPIUpload =
+                reg.paymentStatus === "pending" &&
+                !reg.entryCode &&
+                !reg.paymentProofUrl;
+              const verificationPending =
+                reg.paymentVerificationStatus === "pending";
+              const verificationRejected =
+                reg.paymentVerificationStatus === "rejected";
+
               return (
                 <div key={reg._id} className="reg-card sharp-card">
                   <div className="reg-card-header">
@@ -139,18 +130,49 @@ function UserDashboard() {
                         {ev?.date} · {ev?.location}
                       </div>
                     </div>
-                    <span
-                      className={`status-chip font-mono status-${reg.paymentStatus}`}
+                    <div
+                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
                     >
-                      {reg.paymentStatus}
-                    </span>
+                      <span
+                        className={`status-chip font-mono status-${reg.paymentStatus}`}
+                      >
+                        {reg.paymentStatus}
+                      </span>
+                      {reg.paymentVerificationStatus && (
+                        <span
+                          className="status-chip font-mono"
+                          style={{
+                            background:
+                              reg.paymentVerificationStatus === "approved"
+                                ? "rgba(34, 109, 11, 0.15)"
+                                : reg.paymentVerificationStatus === "rejected"
+                                  ? "rgba(203, 27, 58, 0.1)"
+                                  : "rgba(223, 166, 81, 0.15)",
+                            color:
+                              reg.paymentVerificationStatus === "approved"
+                                ? "#226d0b"
+                                : reg.paymentVerificationStatus === "rejected"
+                                  ? "#cb1b3a"
+                                  : "#dfa651",
+                            border:
+                              reg.paymentVerificationStatus === "approved"
+                                ? "1px solid rgba(34, 109, 11, 0.3)"
+                                : reg.paymentVerificationStatus === "rejected"
+                                  ? "1px solid rgba(203, 27, 58, 0.3)"
+                                  : "1px solid rgba(223, 166, 81, 0.3)",
+                          }}
+                        >
+                          Verification: {reg.paymentVerificationStatus}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {(reg.entryCode || newCode) && (
+                  {reg.entryCode && (
                     <div className="entry-block">
                       <p className="entry-label font-mono">Entry Code</p>
                       <div className="entry-code font-mono">
-                        {newCode ?? reg.entryCode}
+                        {reg.entryCode}
                       </div>
                       <button
                         className="btn-outline"
@@ -167,23 +189,97 @@ function UserDashboard() {
                     </div>
                   )}
 
-                  {reg.paymentStatus === "pending" && !newCode && (
-                    <div className="reg-actions">
-                      <p className="pay-hint font-mono">
-                        Payment of ₹{reg.amount} pending
-                      </p>
-                      <button
-                        className="btn-primary"
-                        style={{ fontSize: "0.68rem", padding: "10px 20px" }}
-                        disabled={payingId === reg._id}
-                        onClick={() =>
-                          handleCompletePayment(reg._id as Id<"registrations">)
-                        }
+                  {showUPIUpload && sessionToken && (
+                    <div style={{ marginTop: "16px" }}>
+                      <UPIPaymentUpload
+                        registrationId={reg._id as Id<"registrations">}
+                        sessionToken={sessionToken}
+                        
+                        amount={reg.amount}
+                        onSuccess={() => setUploadingId(null)}
+                      />
+                    </div>
+                  )}
+
+                  {verificationPending && reg.paymentProofUrl && (
+                    <div
+                      style={{
+                        marginTop: "16px",
+                        padding: "12px",
+                        background: "rgba(223, 166, 81, 0.08)",
+                        border: "1px solid rgba(223, 166, 81, 0.2)",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "0.7rem",
+                          color: "rgba(245, 240, 232, 0.5)",
+                          marginBottom: "8px",
+                        }}
                       >
-                        {payingId === reg._id
-                          ? "Processing…"
-                          : "Confirm Payment →"}
-                      </button>
+                        Payment Verification Status
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "#dfa651",
+                          fontFamily: "'Space Mono', monospace",
+                        }}
+                      >
+                        ⏳ Pending admin verification
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "rgba(245, 240, 232, 0.4)",
+                          marginTop: "6px",
+                        }}
+                      >
+                        Your payment screenshot is being reviewed. You'll
+                        receive an entry code once approved.
+                      </p>
+                    </div>
+                  )}
+
+                  {verificationRejected && (
+                    <div
+                      style={{
+                        marginTop: "16px",
+                        padding: "12px",
+                        background: "rgba(203, 27, 58, 0.1)",
+                        border: "1px solid rgba(203, 27, 58, 0.3)",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "0.7rem",
+                          color: "rgba(245, 240, 232, 0.5)",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Verification Rejected
+                      </p>
+                      {reg.paymentVerificationNotes && (
+                        <p
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#cb1b3a",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          {reg.paymentVerificationNotes}
+                        </p>
+                      )}
+                      <p
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "rgba(245, 240, 232, 0.4)",
+                        }}
+                      >
+                        Please upload a valid payment proof screenshot.
+                      </p>
                     </div>
                   )}
 
@@ -232,8 +328,6 @@ function UserDashboard() {
         .entry-block { margin: 12px 0; padding: 16px; background: #000; border-radius: 4px; display: inline-block; }
         .entry-label { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 6px; }
         .entry-code { font-size: 1.3rem; font-weight: bold; letter-spacing: 0.12em; color: #fff; }
-        .reg-actions { display: flex; align-items: center; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
-        .pay-hint { font-size: 0.65rem; letter-spacing: 0.06em; color: #dfa651; }
         .sub-info { font-size: 0.68rem; letter-spacing: 0.06em; margin-top: 10px; }
         .sub-notes { font-size: 0.78rem; color: rgba(245,240,232,0.45); margin-top: 6px; line-height: 1.6; }
         .back-button { transition: color 0.2s; }

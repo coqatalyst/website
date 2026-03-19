@@ -23,23 +23,41 @@ export function QRScanner({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!scanning || !videoRef.current) return;
 
     const startCamera = async () => {
+      setCameraLoading(true);
+      setCameraError(null);
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
+        const constraints = {
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // Ensure video plays on iOS
+          videoRef.current.play().catch((err) => {
+            console.warn("Autoplay failed:", err);
+          });
         }
+        setCameraLoading(false);
       } catch (error) {
         console.error("Failed to access camera:", error);
-        onVerificationError?.(
-          "Camera access denied. Please use manual entry instead.",
-        );
+        const errorMsg =
+          "Camera access denied. Please use manual entry instead.";
+        setCameraError(errorMsg);
+        setCameraLoading(false);
+        onVerificationError?.(errorMsg);
         setShowManualEntry(true);
         setScanning(false);
       }
@@ -188,10 +206,22 @@ export function QRScanner({
     <div className="qr-scanner-container">
       {scanning && !scannedCode && (
         <div className="scanner-wrapper">
+          {cameraLoading && (
+            <div className="camera-loading">
+              <div className="spinner" />
+              <p>Initializing camera...</p>
+            </div>
+          )}
+          {cameraError && (
+            <div className="camera-error">
+              <p>{cameraError}</p>
+            </div>
+          )}
           <video
             ref={videoRef}
             className="scanner-video"
             autoPlay
+            muted
             playsInline
           />
           <canvas ref={canvasRef} className="scanner-canvas" />
@@ -300,6 +330,36 @@ export function QRScanner({
           align-items: center;
           justify-content: center;
           pointer-events: none;
+        }
+
+        .camera-loading,
+        .camera-error {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.8);
+          z-index: 10;
+          gap: 16px;
+        }
+
+        .camera-error {
+          background: rgba(203, 27, 58, 0.2);
+        }
+
+        .camera-error p {
+          color: #cb1b3a;
+          text-align: center;
+          padding: 0 16px;
+          margin: 0;
+        }
+
+        .camera-loading p {
+          color: #f5f0e8;
+          margin: 0;
+          font-size: 0.9rem;
         }
 
         .scanner-frame {
