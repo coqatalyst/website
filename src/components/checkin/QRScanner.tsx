@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ConvexHttpClient } from "convex/browser";
-import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import jsQR from "jsqr";
@@ -27,7 +26,6 @@ export function QRScanner({
   const [cameraLoading, setCameraLoading] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const convexClientRef = useRef<ConvexHttpClient | null>(null);
-  const markAttendance = useMutation(api.registrations.markAttendance);
 
   // Initialize Convex client
   useEffect(() => {
@@ -135,12 +133,15 @@ export function QRScanner({
       );
 
       if (result.success && result.registration) {
-        // Mark attendance
+        // Mark attendance using Convex HTTP client mutation
         try {
-          await markAttendance({
-            registrationId: result.registration._id,
-            entryCode: code,
-          });
+          await convexClientRef.current.mutation(
+            api.registrations.markAttendance,
+            {
+              registrationId: result.registration._id,
+              entryCode: code,
+            },
+          );
         } catch (attendanceError) {
           console.error("Failed to mark attendance:", attendanceError);
           // Don't fail verification if attendance marking fails
@@ -531,6 +532,12 @@ export function QRScanner({
           font-family: "Bebas Neue", sans-serif;
         }
 
+        .result-subtitle {
+          font-size: 0.85rem;
+          color: rgba(245, 240, 232, 0.6);
+          margin: -8px 0 16px 0;
+        }
+
         .result-details {
           display: flex;
           flex-direction: column;
@@ -565,12 +572,6 @@ export function QRScanner({
           color: #226d0b;
           font-weight: 600;
           letter-spacing: 0.05em;
-        }
-
-        .result-subtitle {
-          font-size: 0.85rem;
-          color: rgba(245, 240, 232, 0.6);
-          margin: -8px 0 16px 0;
         }
 
         .result-message {
