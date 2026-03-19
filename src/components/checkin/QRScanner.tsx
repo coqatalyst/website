@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ConvexHttpClient } from "convex/browser";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import jsQR from "jsqr";
@@ -26,6 +27,7 @@ export function QRScanner({
   const [cameraLoading, setCameraLoading] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const convexClientRef = useRef<ConvexHttpClient | null>(null);
+  const markAttendance = useMutation(api.registrations.markAttendance);
 
   // Initialize Convex client
   useEffect(() => {
@@ -132,7 +134,18 @@ export function QRScanner({
         },
       );
 
-      if (result.success) {
+      if (result.success && result.registration) {
+        // Mark attendance
+        try {
+          await markAttendance({
+            registrationId: result.registration._id,
+            entryCode: code,
+          });
+        } catch (attendanceError) {
+          console.error("Failed to mark attendance:", attendanceError);
+          // Don't fail verification if attendance marking fails
+        }
+
         setVerificationResult(result);
         onVerificationSuccess?.(result);
       } else {
@@ -179,6 +192,11 @@ export function QRScanner({
           <div className="result-success">
             <div className="result-icon">✓</div>
             <h3 className="result-title">Entry Code Valid</h3>
+            <p className="result-subtitle">
+              {verificationResult.registration?.attended
+                ? "Attendance already recorded"
+                : "Attendance marked"}
+            </p>
             <div className="result-details">
               <p className="detail-row">
                 <span className="detail-label">Name:</span>
@@ -196,6 +214,14 @@ export function QRScanner({
                 <span className="detail-label">Event:</span>
                 <span className="detail-value">
                   {verificationResult.event?.title}
+                </span>
+              </p>
+              <p className="detail-row">
+                <span className="detail-label">Attendance:</span>
+                <span className="detail-value attendance-status">
+                  {verificationResult.registration?.attended
+                    ? "✓ Marked Attended"
+                    : "Not Attended"}
                 </span>
               </p>
             </div>
@@ -533,6 +559,18 @@ export function QRScanner({
         .detail-value {
           color: #f5f0e8;
           word-break: break-word;
+        }
+
+        .detail-value.attendance-status {
+          color: #226d0b;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+        }
+
+        .result-subtitle {
+          font-size: 0.85rem;
+          color: rgba(245, 240, 232, 0.6);
+          margin: -8px 0 16px 0;
         }
 
         .result-message {

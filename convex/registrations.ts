@@ -88,6 +88,7 @@ export const registerForEvent = mutation({
       submissionFileName: args.submissionFileName,
       submissionGdriveLink: args.submissionGdriveLink,
       submissionNotes: args.submissionNotes,
+      attended: false,
       createdAt: Date.now(),
     });
 
@@ -480,5 +481,61 @@ export const getPendingPaymentVerifications = query({
       }),
     );
     return result.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const markAttendance = mutation({
+  args: {
+    registrationId: v.id("registrations"),
+    entryCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const registration = await ctx.db.get(args.registrationId);
+    if (!registration) {
+      return { success: false, error: "Registration not found." };
+    }
+
+    // Verify the entry code matches
+    if (registration.entryCode !== args.entryCode) {
+      return {
+        success: false,
+        error: "Invalid entry code for this registration.",
+      };
+    }
+
+    // Mark as attended
+    await ctx.db.patch(args.registrationId, {
+      attended: true,
+      attendedAt: Date.now(),
+    });
+
+    // Return updated registration with related data
+    const user = await ctx.db.get(registration.userId);
+    const event = await ctx.db.get(registration.eventId);
+
+    return {
+      success: true,
+      message: registration.attended
+        ? "Already marked as attended"
+        : "Successfully marked as attended",
+      registration: {
+        ...registration,
+        attended: true,
+        attendedAt: Date.now(),
+      },
+      user: user
+        ? {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+          }
+        : null,
+      event: event
+        ? {
+            id: event._id,
+            title: event.title,
+          }
+        : null,
+    };
   },
 });

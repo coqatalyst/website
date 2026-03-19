@@ -8,7 +8,13 @@ import QRScanner from "../checkin/QRScanner";
 
 const BASE = import.meta.env.BASE_URL ?? "/";
 
-type Tab = "events" | "blogs" | "registrations" | "checkin" | "payments";
+type Tab =
+  | "events"
+  | "blogs"
+  | "registrations"
+  | "checkin"
+  | "payments"
+  | "attendance";
 
 const ACCENT_OPTIONS = [
   { label: "Green", value: "#226d0b" },
@@ -74,6 +80,10 @@ function AdminDashboard() {
   const [verifyNotes, setVerifyNotes] = useState("");
   const [verifyMsg, setVerifyMsg] = useState("");
 
+  const [selectedEventForAttendance, setSelectedEventForAttendance] =
+    useState<Id<"events"> | null>(null);
+  const [attendanceSearch, setAttendanceSearch] = useState("");
+
   useEffect(() => {
     const token = localStorage.getItem("cq_session");
     setSessionToken(token);
@@ -96,6 +106,11 @@ function AdminDashboard() {
     api.registrations.getAllRegistrations,
     sessionToken ? { sessionToken } : "skip",
   );
+  const allEventsForAttendance = useQuery(
+    api.events.listAllEvents,
+    sessionToken ? { sessionToken } : "skip",
+  );
+
   const pendingPayments = useQuery(
     api.registrations.getPendingPaymentVerifications,
     sessionToken ? { sessionToken } : "skip",
@@ -265,6 +280,7 @@ function AdminDashboard() {
                 "registrations",
                 "checkin",
                 "payments",
+                "attendance",
               ] as Tab[]
             ).map((t) => (
               <button
@@ -964,6 +980,367 @@ function AdminDashboard() {
                   onVerificationError={() => {}}
                 />
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === "attendance" && (
+          <div className="tab-content">
+            <div className="section-header">
+              <h3 className="font-display" style={{ marginBottom: "24px" }}>
+                Event Attendance
+              </h3>
+            </div>
+
+            <div style={{ marginBottom: "24px", display: "flex", gap: "12px" }}>
+              <select
+                value={selectedEventForAttendance || ""}
+                onChange={(e) =>
+                  setSelectedEventForAttendance(
+                    (e.target.value as Id<"events">) || null,
+                  )
+                }
+                style={{
+                  padding: "8px 12px",
+                  background: "rgba(0,0,0,0.3)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#f5f0e8",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  flex: 1,
+                }}
+              >
+                <option value="">Select event...</option>
+                {allEventsForAttendance?.map((event: any) => (
+                  <option key={event._id} value={event._id}>
+                    {event.title}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={attendanceSearch}
+                onChange={(e) => setAttendanceSearch(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  background: "rgba(0,0,0,0.3)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#f5f0e8",
+                  borderRadius: "4px",
+                  flex: 1,
+                }}
+              />
+            </div>
+
+            {selectedEventForAttendance && (
+              <div>
+                {allRegistrations && (
+                  <div>
+                    {(() => {
+                      const eventRegs = allRegistrations.filter(
+                        (r: any) => r.eventId === selectedEventForAttendance,
+                      );
+                      const filteredRegs = eventRegs.filter((r: any) => {
+                        const search = attendanceSearch.toLowerCase();
+                        const name = r.registrant?.name?.toLowerCase() || "";
+                        const email = r.registrant?.email?.toLowerCase() || "";
+                        return name.includes(search) || email.includes(search);
+                      });
+
+                      const attended = filteredRegs.filter(
+                        (r: any) => r.attended,
+                      );
+                      const notAttended = filteredRegs.filter(
+                        (r: any) => !r.attended,
+                      );
+
+                      return (
+                        <>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fit, minmax(200px, 1fr))",
+                              gap: "16px",
+                              marginBottom: "24px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                padding: "16px",
+                                background: "rgba(34, 109, 11, 0.1)",
+                                border: "1px solid rgba(34, 109, 11, 0.3)",
+                                borderRadius: "4px",
+                                textAlign: "center",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "1.5rem",
+                                  color: "#226d0b",
+                                  fontWeight: "bold",
+                                  marginBottom: "4px",
+                                }}
+                              >
+                                {attended.length}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "rgba(245, 240, 232, 0.6)",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.1em",
+                                }}
+                              >
+                                Attended
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                padding: "16px",
+                                background: "rgba(203, 27, 58, 0.1)",
+                                border: "1px solid rgba(203, 27, 58, 0.3)",
+                                borderRadius: "4px",
+                                textAlign: "center",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "1.5rem",
+                                  color: "#cb1b3a",
+                                  fontWeight: "bold",
+                                  marginBottom: "4px",
+                                }}
+                              >
+                                {notAttended.length}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "rgba(245, 240, 232, 0.6)",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.1em",
+                                }}
+                              >
+                                Not Attended
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                padding: "16px",
+                                background: "rgba(223, 166, 81, 0.1)",
+                                border: "1px solid rgba(223, 166, 81, 0.3)",
+                                borderRadius: "4px",
+                                textAlign: "center",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "1.5rem",
+                                  color: "#dfa651",
+                                  fontWeight: "bold",
+                                  marginBottom: "4px",
+                                }}
+                              >
+                                {filteredRegs.length}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "rgba(245, 240, 232, 0.6)",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.1em",
+                                }}
+                              >
+                                Total
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ marginBottom: "24px" }}>
+                            <h4
+                              style={{
+                                color: "#226d0b",
+                                marginBottom: "12px",
+                                fontSize: "0.9rem",
+                              }}
+                            >
+                              ✓ Attended ({attended.length})
+                            </h4>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}
+                            >
+                              {attended.length === 0 ? (
+                                <p
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "rgba(245, 240, 232, 0.4)",
+                                  }}
+                                >
+                                  No attendees yet
+                                </p>
+                              ) : (
+                                attended.map((reg: any) => (
+                                  <div
+                                    key={reg._id}
+                                    style={{
+                                      padding: "12px",
+                                      background: "rgba(34, 109, 11, 0.05)",
+                                      border:
+                                        "1px solid rgba(34, 109, 11, 0.2)",
+                                      borderRadius: "4px",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div>
+                                      <p
+                                        style={{
+                                          margin: "0 0 4px 0",
+                                          fontSize: "0.9rem",
+                                          color: "#f5f0e8",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {reg.registrant?.name}
+                                      </p>
+                                      <p
+                                        style={{
+                                          margin: "0",
+                                          fontSize: "0.75rem",
+                                          color: "rgba(245, 240, 232, 0.5)",
+                                        }}
+                                      >
+                                        {reg.registrant?.email}
+                                      </p>
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        color: "#226d0b",
+                                        background: "rgba(34, 109, 11, 0.2)",
+                                        padding: "4px 8px",
+                                        borderRadius: "3px",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {reg.attendedAt
+                                        ? new Date(
+                                            reg.attendedAt,
+                                          ).toLocaleString()
+                                        : "Checked in"}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4
+                              style={{
+                                color: "#cb1b3a",
+                                marginBottom: "12px",
+                                fontSize: "0.9rem",
+                              }}
+                            >
+                              ✗ Not Attended ({notAttended.length})
+                            </h4>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}
+                            >
+                              {notAttended.length === 0 ? (
+                                <p
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "rgba(245, 240, 232, 0.4)",
+                                  }}
+                                >
+                                  Everyone attended!
+                                </p>
+                              ) : (
+                                notAttended.map((reg: any) => (
+                                  <div
+                                    key={reg._id}
+                                    style={{
+                                      padding: "12px",
+                                      background: "rgba(203, 27, 58, 0.05)",
+                                      border:
+                                        "1px solid rgba(203, 27, 58, 0.2)",
+                                      borderRadius: "4px",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <div>
+                                      <p
+                                        style={{
+                                          margin: "0 0 4px 0",
+                                          fontSize: "0.9rem",
+                                          color: "#f5f0e8",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {reg.registrant?.name}
+                                      </p>
+                                      <p
+                                        style={{
+                                          margin: "0",
+                                          fontSize: "0.75rem",
+                                          color: "rgba(245, 240, 232, 0.5)",
+                                        }}
+                                      >
+                                        {reg.registrant?.email}
+                                      </p>
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        color: "#cb1b3a",
+                                        background: "rgba(203, 27, 58, 0.2)",
+                                        padding: "4px 8px",
+                                        borderRadius: "3px",
+                                      }}
+                                    >
+                                      No check-in
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!selectedEventForAttendance && (
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "rgba(245, 240, 232, 0.4)",
+                  textAlign: "center",
+                }}
+              >
+                Select an event to view attendance records
+              </p>
             )}
           </div>
         )}

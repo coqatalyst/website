@@ -91,6 +91,8 @@ export default defineSchema({
     ),
     paymentVerificationNotes: v.optional(v.string()),
     upiTransactionId: v.optional(v.string()),
+    attended: v.boolean(),
+    attendedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
