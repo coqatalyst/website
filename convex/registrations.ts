@@ -379,6 +379,9 @@ export const verifyPayment = mutation({
     const reg = await ctx.db.get(args.registrationId);
     if (!reg) return { success: false, error: "Registration not found." };
 
+    const registrant = await ctx.db.get(reg.userId);
+    const event = await ctx.db.get(reg.eventId);
+
     if (args.approved) {
       const entryCode = generateEntryCode();
       await ctx.db.patch(args.registrationId, {
@@ -390,13 +393,10 @@ export const verifyPayment = mutation({
         passGenerated: true,
       });
 
-      const registrant = await ctx.db.get(reg.userId);
-      const event = await ctx.db.get(reg.eventId);
-
       if (registrant && event) {
         await ctx.scheduler.runAfter(
           0,
-          internal.registrations.sendPaymentEmail,
+          internal.registrations.sendPaymentApprovalEmail,
           {
             email: registrant.email,
             name: registrant.name,
@@ -412,12 +412,26 @@ export const verifyPayment = mutation({
         paymentVerificationStatus: "rejected",
         paymentVerificationNotes: args.notes,
       });
+
+      if (registrant && event) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.registrations.sendPaymentRejectionEmail,
+          {
+            email: registrant.email,
+            name: registrant.name,
+            eventName: event.title,
+            reason: args.notes,
+          },
+        );
+      }
+
       return { success: true };
     }
   },
 });
 
-export const sendPaymentEmail = internalAction({
+export const sendPaymentApprovalEmail = internalAction({
   args: {
     email: v.string(),
     name: v.string(),
@@ -430,7 +444,7 @@ export const sendPaymentEmail = internalAction({
       await resend.emails.send({
         from: "CoQatalyst <noreply@coqatalyst.com>",
         to: [args.email],
-        subject: `Registration Confirmed: ${args.eventName}`,
+        subject: `Payment Approved: ${args.eventName}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Payment Verified!</h2>
@@ -447,7 +461,42 @@ export const sendPaymentEmail = internalAction({
         `,
       });
     } catch (error) {
-      console.error("Failed to send payment confirmation email:", error);
+      console.error("Failed to send payment approval email:", error);
+    }
+  },
+});
+
+export const sendPaymentRejectionEmail = internalAction({
+  args: {
+    email: v.string(),
+    name: v.string(),
+    eventName: v.string(),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+      await resend.emails.send({
+        from: "CoQatalyst <noreply@coqatalyst.com>",
+        to: [args.email],
+        subject: `Payment Rejected: ${args.eventName}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Payment Verification Update</h2>
+            <p>Hi ${args.name},</p>
+            <p>We reviewed your payment for <strong>${args.eventName}</strong> and were unable to approve it.</p>
+            ${
+              args.reason
+                ? `<p><strong>Reason:</strong> ${args.reason}</p>`
+                : ""
+            }
+            <p>Please update your payment proof and resubmit it if needed.</p>
+            <p>- The CoQatalyst Team</p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send payment rejection email:", error);
     }
   },
 });
