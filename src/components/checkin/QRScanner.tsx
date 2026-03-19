@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useQuery } from "convex/react";
+import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../convex/_generated/api";
-
+import type { Id } from "../../../convex/_generated/dataModel";
 import jsQR from "jsqr";
 
 interface QRScannerProps {
@@ -25,7 +25,17 @@ export function QRScanner({
   const [loading, setLoading] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const convexClientRef = useRef<ConvexHttpClient | null>(null);
 
+  // Initialize Convex client
+  useEffect(() => {
+    const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+    if (convexUrl && !convexClientRef.current) {
+      convexClientRef.current = new ConvexHttpClient(convexUrl);
+    }
+  }, []);
+
+  // Camera setup
   useEffect(() => {
     if (!scanning || !videoRef.current) return;
 
@@ -45,7 +55,6 @@ export function QRScanner({
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // Ensure video plays on iOS
           videoRef.current.play().catch((err) => {
             console.warn("Autoplay failed:", err);
           });
@@ -73,6 +82,7 @@ export function QRScanner({
     };
   }, [scanning, onVerificationError]);
 
+  // QR code scanning
   useEffect(() => {
     if (!scanning || !videoRef.current || !canvasRef.current || scannedCode)
       return;
@@ -110,13 +120,17 @@ export function QRScanner({
   const handleVerifyCode = async (code: string) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/verify-entry-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, entryCode: code }),
-      });
+      if (!convexClientRef.current) {
+        throw new Error("Convex client not initialized");
+      }
 
-      const result = await response.json();
+      const result = await convexClientRef.current.query(
+        api.registrations.verifyEntryCode,
+        {
+          eventId: eventId as Id<"events">,
+          entryCode: code,
+        },
+      );
 
       if (result.success) {
         setVerificationResult(result);
@@ -126,8 +140,23 @@ export function QRScanner({
         setVerificationResult({ success: false, error: result.error });
       }
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Verification failed";
+      let errorMsg = "Verification failed";
+
+      if (error instanceof Error) {
+        if (error.message.includes("not initialized")) {
+          errorMsg = "System not ready. Please refresh the page.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMsg =
+            "Network error. Please check your connection and try again.";
+        } else {
+          errorMsg = error.message;
+        }
+      }
+
+      console.error("Verification error:", error);
       onVerificationError?.(errorMsg);
       setVerificationResult({ success: false, error: errorMsg });
     } finally {
