@@ -30,7 +30,7 @@ export const register = action({
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: "Coqatalyst Verification <noreply@coqatalyst.org>",
+        from: "Coqatalyst <noreply@coqatalyst.org>",
         to: [args.email],
         subject: "Verify your Coqatalyst account",
         html: `
