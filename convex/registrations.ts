@@ -442,7 +442,7 @@ export const sendPaymentApprovalEmail = internalAction({
     const resend = new Resend(process.env.RESEND_API_KEY);
     try {
       await resend.emails.send({
-        from: "CoQatalyst <noreply@coqatalyst.com>",
+        from: "CoQatalyst <noreply@coqatalyst.org>",
         to: [args.email],
         subject: `Payment Approved: ${args.eventName}`,
         html: `
@@ -477,7 +477,7 @@ export const sendPaymentRejectionEmail = internalAction({
     const resend = new Resend(process.env.RESEND_API_KEY);
     try {
       await resend.emails.send({
-        from: "CoQatalyst <noreply@coqatalyst.com>",
+        from: "CoQatalyst <noreply@coqatalyst.org>",
         to: [args.email],
         subject: `Payment Rejected: ${args.eventName}`,
         html: `
