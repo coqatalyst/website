@@ -477,7 +477,7 @@ export const sendPaymentApprovalEmail = internalAction({
             <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
               ${args.entryCode}
             </div>
-            <p>You can also view this code anytime from your <a href="https://coqatalyst.com/dashboard">Dashboard</a>.</p>
+            <p>You can also view this code anytime from your <a href="https://coqatalyst.org/dashboard">Dashboard</a>.</p>
             <p>See you there!</p>
             <p>- The CoQatalyst Team</p>
           </div>
