@@ -18,7 +18,6 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
 
   const registerMutation = useMutation(api.registrations.registerForEvent);
 
-  
   const [submissionType, setSubmissionType] = useState<"gdrive_link" | "none">(
     "none",
   );
@@ -132,17 +131,21 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
                     email.
                   </p>
                   <p className="notice-timeline font-mono">
-                    Verification usually takes 1-2 hours.
+                    Verification usually takes 2 to 3 days.
                   </p>
                 </div>
               </div>
             )}
 
-                        {isPaidEventWithPendingPayment ? (
+            {isPaidEventWithPendingPayment ? (
               <a
                 href={`${BASE}dashboard`}
                 className="btn-primary"
-                style={{ marginTop: 24, display: "inline-block", textDecoration: "none" }}
+                style={{
+                  marginTop: 24,
+                  display: "inline-block",
+                  textDecoration: "none",
+                }}
               >
                 Go to Dashboard &rarr;
               </a>
@@ -174,20 +177,51 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
               </div>
             </div>
 
-            
             <form onSubmit={handleSubmit} className="reg-form">
               {!ev.isFree && (
-                <div className="field" style={{ padding: "16px", background: "rgba(223,166,81,0.08)", border: "1px solid rgba(223,166,81,0.2)", borderRadius: "4px" }}>
-                  <label className="field-label font-mono" style={{ color: "#dfa651", fontSize: "0.75rem", marginBottom: "8px" }}>Payment Details</label>
-                  <p style={{ fontSize: "0.85rem", color: "rgba(245,240,232,0.8)", margin: "0 0 8px 0" }}>
+                <div
+                  className="field"
+                  style={{
+                    padding: "16px",
+                    background: "rgba(223,166,81,0.08)",
+                    border: "1px solid rgba(223,166,81,0.2)",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <label
+                    className="field-label font-mono"
+                    style={{
+                      color: "#dfa651",
+                      fontSize: "0.75rem",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Payment Details
+                  </label>
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "rgba(245,240,232,0.8)",
+                      margin: "0 0 8px 0",
+                    }}
+                  >
                     Registration fee: <strong>₹{ev.price}</strong>
                   </p>
-                  <p style={{ fontSize: "0.7rem", color: "rgba(245,240,232,0.5)", lineHeight: 1.4, margin: 0 }}>
-                    After confirming your registration, you will be redirected to your dashboard to complete the payment via UPI and upload a screenshot for verification.
+                  <p
+                    style={{
+                      fontSize: "0.7rem",
+                      color: "rgba(245,240,232,0.5)",
+                      lineHeight: 1.4,
+                      margin: 0,
+                    }}
+                  >
+                    After confirming your registration, you will be redirected
+                    to your dashboard to complete the payment via UPI and upload
+                    a screenshot for verification.
                   </p>
                 </div>
               )}
-<div className="field">
+              <div className="field">
                 <label className="field-label font-mono">
                   Project / Submission (Optional)
                 </label>
