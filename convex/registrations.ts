@@ -336,6 +336,16 @@ export const uploadPaymentProof = mutation({
       return { success: false, error: "Invalid storage ID format." };
     }
 
+    // Delete old payment proof if it exists (allows reapplication after rejection)
+    if (reg.paymentProofStorageId) {
+      try {
+        await ctx.storage.delete(reg.paymentProofStorageId);
+      } catch (error) {
+        console.error("Failed to delete old payment proof:", error);
+        // Continue with upload even if deletion fails
+      }
+    }
+
     let paymentProofUrl: string | null;
     try {
       paymentProofUrl = await ctx.storage.getUrl(storageId);
@@ -382,6 +392,15 @@ export const verifyPayment = mutation({
     const registrant = await ctx.db.get(reg.userId);
     const event = await ctx.db.get(reg.eventId);
 
+    // Delete payment proof from storage regardless of approval status
+    if (reg.paymentProofStorageId) {
+      try {
+        await ctx.storage.delete(reg.paymentProofStorageId);
+      } catch (error) {
+        console.error("Failed to delete payment proof:", error);
+      }
+    }
+
     if (args.approved) {
       const entryCode = generateEntryCode();
       await ctx.db.patch(args.registrationId, {
@@ -391,6 +410,8 @@ export const verifyPayment = mutation({
         paidAt: Date.now(),
         entryCode,
         passGenerated: true,
+        paymentProofStorageId: undefined,
+        paymentProofUrl: undefined,
       });
 
       if (registrant && event) {
@@ -411,6 +432,8 @@ export const verifyPayment = mutation({
       await ctx.db.patch(args.registrationId, {
         paymentVerificationStatus: "rejected",
         paymentVerificationNotes: args.notes,
+        paymentProofStorageId: undefined,
+        paymentProofUrl: undefined,
       });
 
       if (registrant && event) {
@@ -530,6 +553,47 @@ export const getPendingPaymentVerifications = query({
       }),
     );
     return result.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const reapplyForPayment = mutation({
+  args: {
+    sessionToken: v.string(),
+    registrationId: v.id("registrations"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getSessionUser(ctx, args.sessionToken);
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const reg = await ctx.db.get(args.registrationId);
+    if (!reg) return { success: false, error: "Registration not found." };
+    if (reg.userId !== user._id) return { success: false, error: "Forbidden." };
+
+    if (reg.paymentVerificationStatus !== "rejected") {
+      return { success: false, error: "This registration was not rejected." };
+    }
+
+    // Delete old payment proof if it exists
+    if (reg.paymentProofStorageId) {
+      try {
+        await ctx.storage.delete(reg.paymentProofStorageId);
+      } catch (error) {
+        console.error("Failed to delete old payment proof:", error);
+      }
+    }
+
+    // Reset the payment verification status and clear proof references
+    await ctx.db.patch(args.registrationId, {
+      paymentVerificationStatus: undefined,
+      paymentVerificationNotes: undefined,
+      paymentProofStorageId: undefined,
+      paymentProofUrl: undefined,
+    });
+
+    return {
+      success: true,
+      message: "Ready to resubmit your payment proof.",
+    };
   },
 });
 
