@@ -11,6 +11,9 @@ const BASE = import.meta.env.BASE_URL ?? "/";
 function UserDashboard() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [reapplyMsg, setReapplyMsg] = useState<string>("");
+
+  const reapplyForPayment = useMutation(api.registrations.reapplyForPayment);
 
   useEffect(() => {
     setSessionToken(localStorage.getItem("cq_session"));
@@ -194,7 +197,6 @@ function UserDashboard() {
                       <UPIPaymentUpload
                         registrationId={reg._id as Id<"registrations">}
                         sessionToken={sessionToken}
-                        
                         amount={reg.amount}
                         onSuccess={() => setUploadingId(null)}
                       />
@@ -276,10 +278,56 @@ function UserDashboard() {
                         style={{
                           fontSize: "0.65rem",
                           color: "rgba(245, 240, 232, 0.4)",
+                          marginBottom: "12px",
                         }}
                       >
                         Please upload a valid payment proof screenshot.
                       </p>
+                      {reapplyMsg && (
+                        <div
+                          style={{
+                            fontSize: "0.65rem",
+                            color: reapplyMsg.startsWith("✓")
+                              ? "#226d0b"
+                              : "#cb1b3a",
+                            marginBottom: "8px",
+                            padding: "8px",
+                            background: reapplyMsg.startsWith("✓")
+                              ? "rgba(34, 109, 11, 0.1)"
+                              : "rgba(203, 27, 58, 0.1)",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {reapplyMsg}
+                        </div>
+                      )}
+                      <button
+                        className="btn-primary"
+                        style={{
+                          fontSize: "0.7rem",
+                          padding: "8px 12px",
+                          width: "100%",
+                        }}
+                        onClick={async () => {
+                          setReapplyMsg("");
+                          if (!sessionToken) return;
+                          try {
+                            const res = await reapplyForPayment({
+                              sessionToken,
+                              registrationId: reg._id as Id<"registrations">,
+                            });
+                            if (res.success) {
+                              setReapplyMsg("✓ " + res.message);
+                            } else {
+                              setReapplyMsg("✗ " + res.error);
+                            }
+                          } catch (e: any) {
+                            setReapplyMsg("✗ " + e.message);
+                          }
+                        }}
+                      >
+                        Reapply with New Payment Proof →
+                      </button>
                     </div>
                   )}
 
