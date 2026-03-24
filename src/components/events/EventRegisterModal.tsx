@@ -221,6 +221,32 @@ function EventRegisterModal({ eventId, sessionToken, onClose }: Props) {
                   </p>
                 </div>
               )}
+
+              {!ev.isFree && (
+                <div
+                  className="field"
+                  style={{
+                    padding: "16px",
+                    background: "rgba(203, 27, 58, 0.08)",
+                    border: "1px solid rgba(203, 27, 58, 0.2)",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      color: "#cb1b3a",
+                      margin: "0",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    Free Verification for Below Poverty Line Individuals -
+                    Upload your BPL certificate in the dashboard after
+                    registration for free verification.
+                  </p>
+                </div>
+              )}
               <div className="field">
                 <label className="field-label font-mono">
                   Project / Submission (Optional)

@@ -187,6 +187,29 @@ export function UPIPaymentUpload({
 
       <div
         style={{
+          padding: "16px",
+          background: "rgba(203, 27, 58, 0.08)",
+          borderRadius: "4px",
+          marginBottom: "24px",
+          border: "1px solid rgba(203, 27, 58, 0.2)",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "0.85rem",
+            fontWeight: "600",
+            color: "#cb1b3a",
+            margin: "0",
+            lineHeight: "1.5",
+          }}
+        >
+          Free Verification for Below Poverty Line Individuals - Upload your BPL
+          certificate for free registration verification.
+        </p>
+      </div>
+
+      <div
+        style={{
           padding: "20px",
           background: "rgba(223, 166, 81, 0.1)",
           borderRadius: "8px",

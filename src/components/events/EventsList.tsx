@@ -76,6 +76,30 @@ function EventsList() {
 
   return (
     <>
+      <div className="search-wrap" style={{ paddingTop: "24px" }}>
+        <div
+          style={{
+            padding: "12px 16px",
+            background: "rgba(203, 27, 58, 0.08)",
+            borderRadius: "4px",
+            border: "1px solid rgba(203, 27, 58, 0.2)",
+            marginBottom: "12px",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.8rem",
+              fontWeight: "600",
+              color: "#cb1b3a",
+              margin: "0",
+              lineHeight: "1.4",
+            }}
+          >
+            No Payment for Below Poverty Line Individuals
+          </p>
+        </div>
+      </div>
+
       <div className="search-wrap">
         <div className="search-box">
           <span className="search-icon font-mono">⌖</span>
