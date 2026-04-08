@@ -49,7 +49,6 @@ function Nav({ currentPath = "/" }: NavProps) {
 
   const links = [
     { href: `${BASE}`, label: "Home" },
-    { href: `${BASE}about`, label: "About" },
     { href: `${BASE}events`, label: "Events" },
     { href: `${BASE}blog`, label: "Blog" },
     { href: `${BASE}contact`, label: "Contact" },
