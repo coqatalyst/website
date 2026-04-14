@@ -5,14 +5,14 @@ import { CONTACT_METHODS } from '../config/socials';
 const baseUrl = import.meta.env.BASE_URL;
 
 const faqs = [
-  { q: 'How do I join CoQatalyst?',               a: 'Join our Discord server — that\'s where the community is.'                      },
+  { q: 'How do I join CoQatalyst?',               a: 'Join our Discord server or WhatsApp community — that\'s where the community is. Pick whichever works best for you!'                      },
   { q: 'Is there an age limit?',                  a: 'We are primarily focused on high school and early college students, but all young science enthusiasts are welcome.' },
 ];
 
 const contactMethods = CONTACT_METHODS;
 ---
 
-<Base title="Contact — CoQatalyst" description="Get in touch with CoQatalyst. Join our Discord, email us for collaborations, exhibitions, or partnership opportunities. Let's talk science!" currentPath={`${baseUrl}contact`}>
+<Base title="Contact — CoQatalyst" description="Get in touch with CoQatalyst. Join our Discord or WhatsApp community, email us for collaborations, exhibitions, or partnership opportunities. Let's talk science!" currentPath={`${baseUrl}contact`}>
   <div style="padding-top:67px;">
 
     <section class="contact-hero">
@@ -135,8 +135,8 @@ const contactMethods = CONTACT_METHODS;
   margin: 0 auto;
 }
 
-.contact-body { 
-  padding: 0 24px 100px; 
+.contact-body {
+  padding: 0 24px 100px;
   display: flex;
   justify-content: center;
 }
@@ -145,7 +145,7 @@ const contactMethods = CONTACT_METHODS;
   flex-direction: column;
   gap: 64px;
   width: 100%;
-  max-width: 600px; 
+  max-width: 600px;
 }
 
 .methods-list { display: flex; flex-direction: column; gap: 10px; }
@@ -160,7 +160,7 @@ const contactMethods = CONTACT_METHODS;
   border: 1px solid rgba(255,255,255,0.05);
   transition: all 0.2s;
 }
-.method-card:hover { 
+.method-card:hover {
   background: rgba(var(--rgb), 0.08) !important;
   border-color: rgba(var(--rgb), 0.3);
 }

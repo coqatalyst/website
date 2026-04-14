@@ -28,13 +28,20 @@ const features = [
   },
   {
     num: '03',
+    title: 'WhatsApp Community',
+    desc:  'Join our WhatsApp community for quick updates, real-time discussions, and instant access to science lovers from around the world.',
+    accent: '#25d366',
+    icon: 'MSG',
+  },
+  {
+    num: '04',
     title: 'Research Guidance',
     desc:  'Learn how to design experiments, write papers, and navigate the research world — all peer to peer, no gatekeeping.',
     accent: '#dfa651',
     icon: 'RES',
   },
   {
-    num: '04',
+    num: '05',
     title: 'Collaboration',
     desc:  'Connect with other teen scientists across disciplines: biology, physics, CS, chemistry, environmental science, and more.',
     accent: '#cb1b3a',
@@ -55,6 +62,7 @@ const marqueeItems = Array(6).fill([
   'Teen Research',
   'Cognitive Uphold',
   'Peer Learning',
+  'WhatsApp Community',
   'CoQatalyst',
 ]).flat();
 ---
@@ -187,6 +195,9 @@ const marqueeItems = Array(6).fill([
             <div class="cta-btns">
               <a href={SOCIALS.DISCORD.href} target="_blank" rel="noreferrer" class="btn-primary">
                 Join Discord Now &rarr;
+              </a>
+              <a href={SOCIALS.WHATSAPP.href} target="_blank" rel="noreferrer" class="btn-primary">
+                Join WhatsApp Community &rarr;
               </a>
               <a href={`${baseUrl}contact`} class="btn-outline">Get in Touch</a>
             </div>
